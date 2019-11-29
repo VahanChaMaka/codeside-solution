@@ -3,8 +3,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.io.InputStream;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.io.BufferedOutputStream;
 
 import util.Logger;
@@ -28,6 +27,7 @@ public class Runner {
         Debug debug = new Debug(outputStream);
         while (true) {
             model.ServerMessageGame message = model.ServerMessageGame.readFrom(inputStream);
+            Logger.log(message.toString());
             model.PlayerView playerView = message.getPlayerView();
             if (playerView == null) {
                 break;
@@ -47,7 +47,8 @@ public class Runner {
         String host = args.length < 1 ? "127.0.0.1" : args[0];
         int port = args.length < 2 ? 31001 : Integer.parseInt(args[1]);
         String token = args.length < 3 ? "0000000000000000" : args[2];
-        Logger.isLocalRun =  args.length < 4 && !args[3].equals("local");
+        Logger.isLocalRun =  args.length >= 4 && args[3].equals("local");
+        System.out.println(new ArrayList<>(Arrays.asList(args)));
         new Runner(host, port, token).run();
     }
 }
