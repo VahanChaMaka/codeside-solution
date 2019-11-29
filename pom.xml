@@ -50,6 +50,20 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <configuration>
+                    <mainClass>Runner</mainClass>
+                    <arguments>
+                        <argument>127.0.0.1</argument>
+                        <argument>31001</argument>
+                        <argument>0000000000000000</argument>
+                        <argument>local</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

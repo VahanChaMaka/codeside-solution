@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.io.BufferedOutputStream;
 
+import util.Logger;
 import util.StreamUtil;
 
 public class Runner {
@@ -46,6 +47,7 @@ public class Runner {
         String host = args.length < 1 ? "127.0.0.1" : args[0];
         int port = args.length < 2 ? 31001 : Integer.parseInt(args[1]);
         String token = args.length < 3 ? "0000000000000000" : args[2];
+        Logger.isLocalRun =  args.length < 4 && !args[3].equals("local");
         new Runner(host, port, token).run();
     }
 }
