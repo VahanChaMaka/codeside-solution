@@ -66,7 +66,9 @@ public class Level {
         for (int i = 0; i < tiles.length; i++) {
             Vec2Double startPoint = null;
             for (int j = 0; j < tiles[i].length - 1; j++) {
-                if(startPoint == null && tiles[i][j] != Tile.WALL && tiles[i][j+1] == Tile.WALL){
+                if(startPoint == null
+                        && (tiles[i][j] != Tile.WALL || i == 0 || j == 0)
+                        && tiles[i][j+1] == Tile.WALL){
                     startPoint = new Vec2Double(i, j+1);
                 }
                 if(tiles[i][j] == Tile.WALL && tiles[i][j+1] != Tile.WALL){
