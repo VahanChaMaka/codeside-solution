@@ -3,8 +3,8 @@ package model;
 import util.StreamUtil;
 
 public class Vec2Double {
-    private double x;
-    private double y;
+    public double x;
+    public double y;
 
     public Vec2Double() {}
 
@@ -25,20 +25,16 @@ public class Vec2Double {
         StreamUtil.writeDouble(stream, y);
     }
 
-    public double getX() {
-        return x;
+    public Vec2Double plus(Vec2Double another){
+        return new Vec2Double(this.x + another.x, this.y + another.y);
     }
 
-    public void setX(double x) {
-        this.x = x;
+    public Vec2Double minus(Vec2Double another){
+        return new Vec2Double(this.x - another.x, this.y - another.y);
     }
 
-    public double getY() {
-        return y;
-    }
-
-    public void setY(double y) {
-        this.y = y;
+    public Vec2Float toFloatVector(){
+        return new Vec2Float((float)x, (float)y);
     }
 
     @Override
