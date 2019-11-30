@@ -4,34 +4,19 @@ import util.StreamUtil;
 
 public class WeaponParams {
     private int magazineSize;
-    public int getMagazineSize() { return magazineSize; }
-    public void setMagazineSize(int magazineSize) { this.magazineSize = magazineSize; }
     private double fireRate;
-    public double getFireRate() { return fireRate; }
-    public void setFireRate(double fireRate) { this.fireRate = fireRate; }
     private double reloadTime;
-    public double getReloadTime() { return reloadTime; }
-    public void setReloadTime(double reloadTime) { this.reloadTime = reloadTime; }
     private double minSpread;
-    public double getMinSpread() { return minSpread; }
-    public void setMinSpread(double minSpread) { this.minSpread = minSpread; }
     private double maxSpread;
-    public double getMaxSpread() { return maxSpread; }
-    public void setMaxSpread(double maxSpread) { this.maxSpread = maxSpread; }
     private double recoil;
-    public double getRecoil() { return recoil; }
-    public void setRecoil(double recoil) { this.recoil = recoil; }
     private double aimSpeed;
-    public double getAimSpeed() { return aimSpeed; }
-    public void setAimSpeed(double aimSpeed) { this.aimSpeed = aimSpeed; }
-    private model.BulletParams bullet;
-    public model.BulletParams getBullet() { return bullet; }
-    public void setBullet(model.BulletParams bullet) { this.bullet = bullet; }
-    private model.ExplosionParams explosion;
-    public model.ExplosionParams getExplosion() { return explosion; }
-    public void setExplosion(model.ExplosionParams explosion) { this.explosion = explosion; }
+    private BulletParams bullet;
+    private ExplosionParams explosion;
+
     public WeaponParams() {}
-    public WeaponParams(int magazineSize, double fireRate, double reloadTime, double minSpread, double maxSpread, double recoil, double aimSpeed, model.BulletParams bullet, model.ExplosionParams explosion) {
+
+    public WeaponParams(int magazineSize, double fireRate, double reloadTime, double minSpread, double maxSpread,
+                        double recoil, double aimSpeed, BulletParams bullet, ExplosionParams explosion) {
         this.magazineSize = magazineSize;
         this.fireRate = fireRate;
         this.reloadTime = reloadTime;
@@ -51,9 +36,9 @@ public class WeaponParams {
         result.maxSpread = StreamUtil.readDouble(stream);
         result.recoil = StreamUtil.readDouble(stream);
         result.aimSpeed = StreamUtil.readDouble(stream);
-        result.bullet = model.BulletParams.readFrom(stream);
+        result.bullet = BulletParams.readFrom(stream);
         if (StreamUtil.readBoolean(stream)) {
-            result.explosion = model.ExplosionParams.readFrom(stream);
+            result.explosion = ExplosionParams.readFrom(stream);
         } else {
             result.explosion = null;
         }
@@ -74,5 +59,92 @@ public class WeaponParams {
             StreamUtil.writeBoolean(stream, true);
             explosion.writeTo(stream);
         }
+    }
+
+    public int getMagazineSize() {
+        return magazineSize;
+    }
+
+    public void setMagazineSize(int magazineSize) {
+        this.magazineSize = magazineSize;
+    }
+
+    public double getFireRate() {
+        return fireRate;
+    }
+
+    public void setFireRate(double fireRate) {
+        this.fireRate = fireRate;
+    }
+
+    public double getReloadTime() {
+        return reloadTime;
+    }
+
+    public void setReloadTime(double reloadTime) {
+        this.reloadTime = reloadTime;
+    }
+
+    public double getMinSpread() {
+        return minSpread;
+    }
+
+    public void setMinSpread(double minSpread) {
+        this.minSpread = minSpread;
+    }
+
+    public double getMaxSpread() {
+        return maxSpread;
+    }
+
+    public void setMaxSpread(double maxSpread) {
+        this.maxSpread = maxSpread;
+    }
+
+    public double getRecoil() {
+        return recoil;
+    }
+
+    public void setRecoil(double recoil) {
+        this.recoil = recoil;
+    }
+
+    public double getAimSpeed() {
+        return aimSpeed;
+    }
+
+    public void setAimSpeed(double aimSpeed) {
+        this.aimSpeed = aimSpeed;
+    }
+
+    public BulletParams getBullet() {
+        return bullet;
+    }
+
+    public void setBullet(BulletParams bullet) {
+        this.bullet = bullet;
+    }
+
+    public ExplosionParams getExplosion() {
+        return explosion;
+    }
+
+    public void setExplosion(ExplosionParams explosion) {
+        this.explosion = explosion;
+    }
+
+    @Override
+    public String toString() {
+        return "WeaponParams{" +
+                "magazineSize=" + magazineSize +
+                ", fireRate=" + fireRate +
+                ", reloadTime=" + reloadTime +
+                ", minSpread=" + minSpread +
+                ", maxSpread=" + maxSpread +
+                ", recoil=" + recoil +
+                ", aimSpeed=" + aimSpeed +
+                ", bullet=" + bullet +
+                ", explosion=" + explosion +
+                '}';
     }
 }

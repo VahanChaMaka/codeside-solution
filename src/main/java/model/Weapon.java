@@ -3,33 +3,20 @@ package model;
 import util.StreamUtil;
 
 public class Weapon {
-    private model.WeaponType typ;
-    public model.WeaponType getTyp() { return typ; }
-    public void setTyp(model.WeaponType typ) { this.typ = typ; }
-    private model.WeaponParams params;
-    public model.WeaponParams getParams() { return params; }
-    public void setParams(model.WeaponParams params) { this.params = params; }
+    private WeaponType type;
+    private WeaponParams params;
     private int magazine;
-    public int getMagazine() { return magazine; }
-    public void setMagazine(int magazine) { this.magazine = magazine; }
     private boolean wasShooting;
-    public boolean isWasShooting() { return wasShooting; }
-    public void setWasShooting(boolean wasShooting) { this.wasShooting = wasShooting; }
     private double spread;
-    public double getSpread() { return spread; }
-    public void setSpread(double spread) { this.spread = spread; }
     private Double fireTimer;
-    public Double getFireTimer() { return fireTimer; }
-    public void setFireTimer(Double fireTimer) { this.fireTimer = fireTimer; }
     private Double lastAngle;
-    public Double getLastAngle() { return lastAngle; }
-    public void setLastAngle(Double lastAngle) { this.lastAngle = lastAngle; }
     private Integer lastFireTick;
-    public Integer getLastFireTick() { return lastFireTick; }
-    public void setLastFireTick(Integer lastFireTick) { this.lastFireTick = lastFireTick; }
+
     public Weapon() {}
-    public Weapon(model.WeaponType typ, model.WeaponParams params, int magazine, boolean wasShooting, double spread, Double fireTimer, Double lastAngle, Integer lastFireTick) {
-        this.typ = typ;
+
+    public Weapon(WeaponType type, WeaponParams params, int magazine, boolean wasShooting,
+                  double spread, Double fireTimer, Double lastAngle, Integer lastFireTick) {
+        this.type = type;
         this.params = params;
         this.magazine = magazine;
         this.wasShooting = wasShooting;
@@ -42,18 +29,18 @@ public class Weapon {
         Weapon result = new Weapon();
         switch (StreamUtil.readInt(stream)) {
         case 0:
-            result.typ = model.WeaponType.PISTOL;
+            result.type = WeaponType.PISTOL;
             break;
         case 1:
-            result.typ = model.WeaponType.ASSAULT_RIFLE;
+            result.type = WeaponType.ASSAULT_RIFLE;
             break;
         case 2:
-            result.typ = model.WeaponType.ROCKET_LAUNCHER;
+            result.type = WeaponType.ROCKET_LAUNCHER;
             break;
         default:
             throw new java.io.IOException("Unexpected discriminant value");
         }
-        result.params = model.WeaponParams.readFrom(stream);
+        result.params = WeaponParams.readFrom(stream);
         result.magazine = StreamUtil.readInt(stream);
         result.wasShooting = StreamUtil.readBoolean(stream);
         result.spread = StreamUtil.readDouble(stream);
@@ -75,7 +62,7 @@ public class Weapon {
         return result;
     }
     public void writeTo(java.io.OutputStream stream) throws java.io.IOException {
-        StreamUtil.writeInt(stream, typ.discriminant);
+        StreamUtil.writeInt(stream, type.discriminant);
         params.writeTo(stream);
         StreamUtil.writeInt(stream, magazine);
         StreamUtil.writeBoolean(stream, wasShooting);
@@ -98,5 +85,83 @@ public class Weapon {
             StreamUtil.writeBoolean(stream, true);
             StreamUtil.writeInt(stream, lastFireTick);
         }
+    }
+
+    public WeaponType getType() {
+        return type;
+    }
+
+    public void setType(WeaponType type) {
+        this.type = type;
+    }
+
+    public WeaponParams getParams() {
+        return params;
+    }
+
+    public void setParams(WeaponParams params) {
+        this.params = params;
+    }
+
+    public int getMagazine() {
+        return magazine;
+    }
+
+    public void setMagazine(int magazine) {
+        this.magazine = magazine;
+    }
+
+    public boolean isWasShooting() {
+        return wasShooting;
+    }
+
+    public void setWasShooting(boolean wasShooting) {
+        this.wasShooting = wasShooting;
+    }
+
+    public double getSpread() {
+        return spread;
+    }
+
+    public void setSpread(double spread) {
+        this.spread = spread;
+    }
+
+    public Double getFireTimer() {
+        return fireTimer;
+    }
+
+    public void setFireTimer(Double fireTimer) {
+        this.fireTimer = fireTimer;
+    }
+
+    public Double getLastAngle() {
+        return lastAngle;
+    }
+
+    public void setLastAngle(Double lastAngle) {
+        this.lastAngle = lastAngle;
+    }
+
+    public Integer getLastFireTick() {
+        return lastFireTick;
+    }
+
+    public void setLastFireTick(Integer lastFireTick) {
+        this.lastFireTick = lastFireTick;
+    }
+
+    @Override
+    public String toString() {
+        return "Weapon{" +
+                "type=" + type +
+                ", params=" + params +
+                ", magazine=" + magazine +
+                ", wasShooting=" + wasShooting +
+                ", spread=" + spread +
+                ", fireTimer=" + fireTimer +
+                ", lastAngle=" + lastAngle +
+                ", lastFireTick=" + lastFireTick +
+                '}';
     }
 }

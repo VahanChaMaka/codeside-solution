@@ -4,15 +4,11 @@ import util.StreamUtil;
 
 public class BulletParams {
     private double speed;
-    public double getSpeed() { return speed; }
-    public void setSpeed(double speed) { this.speed = speed; }
     private double size;
-    public double getSize() { return size; }
-    public void setSize(double size) { this.size = size; }
     private int damage;
-    public int getDamage() { return damage; }
-    public void setDamage(int damage) { this.damage = damage; }
+
     public BulletParams() {}
+
     public BulletParams(double speed, double size, int damage) {
         this.speed = speed;
         this.size = size;
@@ -29,5 +25,38 @@ public class BulletParams {
         StreamUtil.writeDouble(stream, speed);
         StreamUtil.writeDouble(stream, size);
         StreamUtil.writeInt(stream, damage);
+    }
+
+    public double getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
+    public double getSize() {
+        return size;
+    }
+
+    public void setSize(double size) {
+        this.size = size;
+    }
+
+    public int getDamage() {
+        return damage;
+    }
+
+    public void setDamage(int damage) {
+        this.damage = damage;
+    }
+
+    @Override
+    public String toString() {
+        return "BulletParams{" +
+                "speed=" + speed +
+                ", size=" + size +
+                ", damage=" + damage +
+                '}';
     }
 }

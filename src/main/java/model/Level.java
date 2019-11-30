@@ -2,35 +2,38 @@ package model;
 
 import util.StreamUtil;
 
+import java.util.Arrays;
+
 public class Level {
-    private model.Tile[][] tiles;
-    public model.Tile[][] getTiles() { return tiles; }
-    public void setTiles(model.Tile[][] tiles) { this.tiles = tiles; }
+    private Tile[][] tiles;
+    
     public Level() {}
-    public Level(model.Tile[][] tiles) {
+    
+    public Level(Tile[][] tiles) {
         this.tiles = tiles;
     }
+    
     public static Level readFrom(java.io.InputStream stream) throws java.io.IOException {
         Level result = new Level();
-        result.tiles = new model.Tile[StreamUtil.readInt(stream)][];
+        result.tiles = new Tile[StreamUtil.readInt(stream)][];
         for (int i = 0; i < result.tiles.length; i++) {
-            result.tiles[i] = new model.Tile[StreamUtil.readInt(stream)];
+            result.tiles[i] = new Tile[StreamUtil.readInt(stream)];
             for (int j = 0; j < result.tiles[i].length; j++) {
                 switch (StreamUtil.readInt(stream)) {
                 case 0:
-                    result.tiles[i][j] = model.Tile.EMPTY;
+                    result.tiles[i][j] = Tile.EMPTY;
                     break;
                 case 1:
-                    result.tiles[i][j] = model.Tile.WALL;
+                    result.tiles[i][j] = Tile.WALL;
                     break;
                 case 2:
-                    result.tiles[i][j] = model.Tile.PLATFORM;
+                    result.tiles[i][j] = Tile.PLATFORM;
                     break;
                 case 3:
-                    result.tiles[i][j] = model.Tile.LADDER;
+                    result.tiles[i][j] = Tile.LADDER;
                     break;
                 case 4:
-                    result.tiles[i][j] = model.Tile.JUMP_PAD;
+                    result.tiles[i][j] = Tile.JUMP_PAD;
                     break;
                 default:
                     throw new java.io.IOException("Unexpected discriminant value");
@@ -41,11 +44,32 @@ public class Level {
     }
     public void writeTo(java.io.OutputStream stream) throws java.io.IOException {
         StreamUtil.writeInt(stream, tiles.length);
-        for (model.Tile[] tilesElement : tiles) {
+        for (Tile[] tilesElement : tiles) {
             StreamUtil.writeInt(stream, tilesElement.length);
-            for (model.Tile tilesElementElement : tilesElement) {
+            for (Tile tilesElementElement : tilesElement) {
                 StreamUtil.writeInt(stream, tilesElementElement.discriminant);
             }
         }
+    }
+
+    public Tile[][] getTiles() {
+        return tiles;
+    }
+
+    public void setTiles(Tile[][] tiles) {
+        this.tiles = tiles;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        for (int i = tiles[0].length-1; i >= 0 ; i--) {
+            for (int j = 0; j < tiles.length; j++) {
+                builder.append(tiles[j][i].discriminant)
+                        .append(" ");
+            }
+            builder.append("\n");
+        }
+        return builder.toString();
     }
 }
