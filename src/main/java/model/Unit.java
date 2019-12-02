@@ -24,7 +24,6 @@ public class Unit {
         this.playerId = playerId;
         this.id = id;
         this.health = health;
-        this.position = position;
         this.size = size;
         this.jumpState = jumpState;
         this.walkedRight = walkedRight;
@@ -102,6 +101,11 @@ public class Unit {
 
     public Vec2Double getPosition() {
         return position;
+    }
+
+    //correct position to center
+    public Vec2Double getPositionForShooting(){
+        return position.plus(0, 0.9);
     }
 
     public void setPosition(Vec2Double position) {

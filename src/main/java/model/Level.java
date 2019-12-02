@@ -71,9 +71,13 @@ public class Level {
                         && tiles[i][j+1] == Tile.WALL){
                     startPoint = new Vec2Double(i, j+1);
                 }
-                if(tiles[i][j] == Tile.WALL && tiles[i][j+1] != Tile.WALL){
+                if(tiles[i][j] == Tile.WALL && tiles[i][j+1] != Tile.WALL && j != 0){
                     Vec2Double endPoint = new Vec2Double(i, j+1);
                     Wall leftWall = new Wall(startPoint,  endPoint);
+                    if(startPoint == null){
+                        Logger.log("Error while building walls: " + i + ", " + j);
+                        Logger.log(this.toString());
+                    }
                     Wall rightWall = new Wall(new Vec2Double(startPoint.x+1, startPoint.y),
                             new Vec2Double(endPoint.x+1, endPoint.y));
 

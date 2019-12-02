@@ -29,8 +29,16 @@ public class Vec2Double {
         return new Vec2Double(this.x + another.x, this.y + another.y);
     }
 
+    public Vec2Double plus(double x, double y){
+        return new Vec2Double(this.x + x, this.y + y);
+    }
+
     public Vec2Double minus(Vec2Double another){
         return new Vec2Double(this.x - another.x, this.y - another.y);
+    }
+
+    public double dot(Vec2Double another){
+        return this.x*another.x + this.y*another.y;
     }
 
     public Vec2Float toFloatVector(){

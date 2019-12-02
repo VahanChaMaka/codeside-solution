@@ -25,7 +25,6 @@ public class Runner {
 
     void run() throws IOException {
         MyStrategy myStrategy = new MyStrategy();
-        Debug debug = new Debug(outputStream);
         while (true) {
             ServerMessageGame message = ServerMessageGame.readFrom(inputStream);
             Logger.log(message.toString());
@@ -36,7 +35,11 @@ public class Runner {
             Map<Integer, UnitAction> actions = new HashMap<>();
             for (Unit unit : playerView.getGame().getUnits()) {
                 if (unit.getPlayerId() == playerView.getMyId()) {
-                    actions.put(unit.getId(), myStrategy.getAction(unit, playerView.getGame(), debug));
+                    Debug debug = new Debug(outputStream);
+                    myStrategy.update(playerView.getGame(), unit, debug);
+                    UnitAction action = myStrategy.getAction();
+                    Logger.log(action.toString());
+                    actions.put(unit.getId(), action);
                 }
             }
             new PlayerMessageGame.ActionMessage(actions).writeTo(outputStream);

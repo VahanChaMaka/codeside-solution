@@ -1,9 +1,7 @@
 package util;
 
-import model.Game;
+import model.*;
 import model.Vec2Double;
-import model.Vec2Double;
-import model.Wall;
 
 public class Utils {
 
@@ -23,5 +21,13 @@ public class Utils {
         }
 
         return true;
+    }
+
+    public static double getAverageDamage(Weapon weapon){
+        return 0;
+    }
+
+    public static double distanceSqr(Vec2Double a, Vec2Double b) {
+        return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
     }
 }

@@ -9,7 +9,7 @@ public class Weapon {
     private boolean wasShooting;
     private double spread;
     private Double fireTimer;
-    private Double lastAngle;
+    private Double lastAngle; //in radians
     private Integer lastFireTick;
 
     public Weapon() {}
