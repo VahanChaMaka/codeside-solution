@@ -87,12 +87,24 @@ public class MyStrategy {
     for (Wall wall : game.getLevel().getWalls()) {
       debug.draw(new CustomData.Line(wall.first.toFloatVector(), wall.second.toFloatVector(), 0.1f, ColorFloat.RED));
     }
+
+    for (Bullet bullet : game.getBullets()) {
+      Vec2Double leftCorner = bullet.getPosition().minus(bullet.getSize()/2, bullet.getSize()/2);
+      debug.draw(new CustomData.Rect(leftCorner, new Vec2Double(bullet.getSize(), bullet.getSize()), ColorFloat.BLUE));
+    }
+
+    for (Unit gameUnit : game.getUnits()) {
+      Vec2Double leftDownCorner = gameUnit.getPosition().minus(game.getProperties().getUnitSize().x/2, 0);
+      debug.draw(new CustomData.Rect(leftDownCorner, game.getProperties().getUnitSize(), new ColorFloat(0, 1, 0, 0.2f)));
+    }
   }
 
   private void drawFireCone(Vec2Double aim){
     if(unit.getWeapon() != null) {
       double spreadAngleHalf = unit.getWeapon().getSpread() / 2;
+      //copy and rotate aim vector counterclock-wise
       Vec2Double one = new Vec2Double(aim.x * Math.cos(spreadAngleHalf) - aim.y * Math.sin(spreadAngleHalf), aim.x * Math.sin(spreadAngleHalf) + aim.y * Math.cos(spreadAngleHalf));
+      //copy and rotate aim vector clock-wise
       Vec2Double another = new Vec2Double(aim.x * Math.cos(spreadAngleHalf) + aim.y * Math.sin(spreadAngleHalf), -aim.x * Math.sin(spreadAngleHalf) + aim.y * Math.cos(spreadAngleHalf));
 
       Vec2Double position = unit.getPositionForShooting();

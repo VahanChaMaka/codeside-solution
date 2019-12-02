@@ -52,9 +52,9 @@ public abstract class CustomData {
         public ColorFloat getColor() { return color; }
         public void setColor(ColorFloat color) { this.color = color; }
         public Rect() {}
-        public Rect(Vec2Float pos, Vec2Float size, ColorFloat color) {
-            this.pos = pos;
-            this.size = size;
+        public Rect(Vec2Double pos, Vec2Double size, ColorFloat color) {
+            this.pos = pos.toFloatVector();
+            this.size = size.toFloatVector();
             this.color = color;
         }
         public static Rect readFrom(java.io.InputStream stream) throws java.io.IOException {
