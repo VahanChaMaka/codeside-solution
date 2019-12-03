@@ -45,6 +45,19 @@ public class Vec2Double {
         return this.x*another.x + this.y*another.y;
     }
 
+    public double length(){
+        return Math.sqrt(x*x + y*y);
+    }
+
+    public void scaleThis(double scale){
+        x = x * scale;
+        y = y * scale;
+    }
+
+    public Vec2Double scale(double scale){
+        return new Vec2Double(x * scale, y * scale);
+    }
+
     public Vec2Float toFloatVector(){
         return new Vec2Float((float)x, (float)y);
     }
