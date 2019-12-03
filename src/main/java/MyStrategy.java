@@ -16,17 +16,12 @@ public class MyStrategy {
 
   public UnitAction getAction() {
     Unit nearestEnemy = getNearestEnemy();
+    if(nearestEnemy != null) {
+      debug.draw(new CustomData.Log("Enemy pos:" + nearestEnemy.getPosition()));
+    }
 
     LootBox nearestWeapon = getNearestWeapon();
 
-    Vec2Double targetPos = unit.getPosition();
-    if (unit.getWeapon() == null && nearestWeapon != null) {
-      targetPos = nearestWeapon.getPosition();
-    } else if (nearestEnemy != null) {
-      targetPos = nearestEnemy.getPosition();
-    }
-
-    debug.draw(new CustomData.Log("Target pos: " + targetPos));
     Vec2Double aim = new Vec2Double(0, 0);
     if (nearestEnemy != null) {
       aim = new Vec2Double(nearestEnemy.getPositionForShooting().x - unit.getPositionForShooting().x,
@@ -34,8 +29,13 @@ public class MyStrategy {
     }
     debug.draw(new CustomData.Line(unit.getPositionForShooting(), nearestEnemy != null? nearestEnemy.getPositionForShooting() : new Vec2Double(), 0.05f, ColorFloat.GREEN));
 
-    double hitChance = getHitProbability(aim, nearestEnemy);
-    debug.draw(new CustomData.Log("Hit chance: " + hitChance));
+    Vec2Double targetPos = unit.getPosition();
+    if (unit.getWeapon() == null && nearestWeapon != null) {
+      targetPos = nearestWeapon.getPosition();
+    } else if (nearestEnemy != null) {
+      targetPos = buildPositionForShooting(nearestEnemy, aim);
+    }
+    debug.draw(new CustomData.Log("Target pos: " + targetPos));
 
     boolean jump = targetPos.y > unit.getPosition().y;
     if (targetPos.x > unit.getPosition().x && game.getLevel()
@@ -43,8 +43,8 @@ public class MyStrategy {
       jump = true;
     }
 
-    if (targetPos.x < unit.getPosition().x && game.getLevel()
-        .getTiles()[(int) (unit.getPosition().x - 1)][(int) (unit.getPosition().y)] == Tile.WALL) {
+    if (targetPos.x < unit.getPosition().x
+            && game.getLevel().getTiles()[(int) (unit.getPosition().x - 1)][(int) (unit.getPosition().y)] == Tile.WALL) {
       jump = true;
     }
 
@@ -53,7 +53,7 @@ public class MyStrategy {
     action.setJump(jump);
     action.setJumpDown(!jump);
     action.setAim(aim);
-    action.setShoot(Utils.canHit(unit.getPosition(), targetPos, game));
+    action.setShoot(nearestEnemy != null && Utils.canHit(unit.getPosition(), nearestEnemy.getPosition(), game));
     action.setSwapWeapon(false);
     action.setPlantMine(false);
     return action;
@@ -99,6 +99,13 @@ public class MyStrategy {
       Vec2Double leftDownCorner = gameUnit.getPosition().minus(game.getProperties().getUnitSize().x/2, 0);
       debug.draw(new CustomData.Rect(leftDownCorner, game.getProperties().getUnitSize(), new ColorFloat(0, 1, 0, 0.2f)));
     }
+
+    if(unit.getWeapon() != null) {
+      //debug.draw(new CustomData.Log("Spread: " + unit.getWeapon().getSpread()));
+      //debug.draw(new CustomData.Log("Aim speed: " + unit.getWeapon().getParams().getAimSpeed()));
+    }
+
+    debug.draw(new CustomData.Log("My pos: " + unit.getPosition()));
   }
 
   private double getHitProbability(Vec2Double aim, Unit target){
@@ -143,6 +150,19 @@ public class MyStrategy {
     }
 
     //TODO: consider partially hidden target (by casting few more rays for example)
+  }
+
+  private Vec2Double buildPositionForShooting(Unit enemy, Vec2Double aimVector){
+    double hitChance = getHitProbability(aimVector, enemy);
+    double distanceToEnemy = enemy.getPositionForShooting().minus(unit.getPositionForShooting()).length();
+    debug.draw(new CustomData.Log("Hit chance: " + hitChance));
+    if(!Utils.canHit(unit.getPositionForShooting(), enemy.getPositionForShooting(), game) || hitChance < 0.5){
+      return enemy.getPosition();
+    } else if(distanceToEnemy < 4){//not sure if it's a good idea
+      return unit.getPositionForShooting().plus(Math.signum(unit.getPositionForShooting().minus(enemy.getPositionForShooting()).x), 0);
+    } else {
+      return unit.getPosition();
+    }
   }
 
 }

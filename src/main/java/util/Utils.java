@@ -10,9 +10,9 @@ public class Utils {
 
         for (Wall wall : game.getLevel().getWalls()) {
             Vec2Double s = wall.second.minus(wall.first);
-            Double d = r.x*s.y - s.x*r.y;
-            Double u = ((wall.first.x - position.x) * r.y - (wall.first.y - position.y) * r.x) / d;
-            Double t = ((wall.first.x - position.x) * s.y - (wall.first.y - position.y) * s.x) / d;
+            double d = r.x*s.y - s.x*r.y;
+            double u = ((wall.first.x - position.x) * r.y - (wall.first.y - position.y) * r.x) / d;
+            double t = ((wall.first.x - position.x) * s.y - (wall.first.y - position.y) * s.x) / d;
 
             //check only interception fact, ignore interception point
             if(u >= 0 && u <= 1 && t >= 0 && t <= 1){
