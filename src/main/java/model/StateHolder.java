@@ -26,6 +26,10 @@ public class StateHolder<T> {
         return states.get(i);
     }
 
+    public int getCurrentSize(){
+        return states.size();
+    }
+
 
     public static void main(String[] args) {
         StateHolder<Integer> s = new StateHolder<>(3);
