@@ -53,4 +53,6 @@ public class ColorFloat {
     public static final ColorFloat GREEN = new ColorFloat(0, 1, 0, 1);
 
     public static final ColorFloat BLUE = new ColorFloat(0, 0, 1, 1);
+
+    public static final ColorFloat YELLOW = new ColorFloat(1, 1, 0, 1);
 }

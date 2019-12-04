@@ -4,30 +4,19 @@ import util.StreamUtil;
 
 public class Mine {
     private int playerId;
-    private Vec2Double position;
+    private Point position;
     private Vec2Double size;
     private MineState state;
     private Double timer;
     private double triggerRadius;
     private ExplosionParams explosionParams;
 
-    public Mine() {}
-
-    public Mine(int playerId, Vec2Double position, Vec2Double size, MineState state,
-                Double timer, double triggerRadius, ExplosionParams explosionParams) {
-        this.playerId = playerId;
-        this.position = position;
-        this.size = size;
-        this.state = state;
-        this.timer = timer;
-        this.triggerRadius = triggerRadius;
-        this.explosionParams = explosionParams;
-    }
+    private Mine() {}
 
     public static Mine readFrom(java.io.InputStream stream) throws java.io.IOException {
         Mine result = new Mine();
         result.playerId = StreamUtil.readInt(stream);
-        result.position = Vec2Double.readFrom(stream);
+        result.position = Point.readFrom(stream);
         result.size = Vec2Double.readFrom(stream);
         switch (StreamUtil.readInt(stream)) {
         case 0:
@@ -78,11 +67,11 @@ public class Mine {
         this.playerId = playerId;
     }
 
-    public Vec2Double getPosition() {
+    public Point getPosition() {
         return position;
     }
 
-    public void setPosition(Vec2Double position) {
+    public void setPosition(Point position) {
         this.position = position;
     }
 

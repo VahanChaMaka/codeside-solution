@@ -6,7 +6,7 @@ public class Bullet {
     private WeaponType weaponType;
     private int unitId;
     private int playerId;
-    private Vec2Double position;
+    private Point position;
     private Vec2Double velocity;
     private int damage;
     private double size;
@@ -14,7 +14,7 @@ public class Bullet {
 
     public Bullet() {}
 
-    public Bullet(WeaponType weaponType, int unitId, int playerId, Vec2Double position, Vec2Double velocity,
+    public Bullet(WeaponType weaponType, int unitId, int playerId, Point position, Vec2Double velocity,
                   int damage, double size, ExplosionParams explosionParams) {
         this.weaponType = weaponType;
         this.unitId = unitId;
@@ -43,7 +43,7 @@ public class Bullet {
         }
         result.unitId = StreamUtil.readInt(stream);
         result.playerId = StreamUtil.readInt(stream);
-        result.position = Vec2Double.readFrom(stream);
+        result.position = Point.readFrom(stream);
         result.velocity = Vec2Double.readFrom(stream);
         result.damage = StreamUtil.readInt(stream);
         result.size = StreamUtil.readDouble(stream);
@@ -95,11 +95,11 @@ public class Bullet {
         this.playerId = playerId;
     }
 
-    public Vec2Double getPosition() {
+    public Point getPosition() {
         return position;
     }
 
-    public void setPosition(Vec2Double position) {
+    public void setPosition(Point position) {
         this.position = position;
     }
 

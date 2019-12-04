@@ -153,14 +153,14 @@ public class Game {
     @Override
     public String toString() {
         return "Game{" +
-                "currentTick=" + currentTick +
-                ", properties=" + properties +
-                ", level=" + level +
-                ", players=" + Arrays.toString(players) +
-                ", units=" + Arrays.toString(units) +
-                ", bullets=" + Arrays.toString(bullets) +
-                ", mines=" + Arrays.toString(mines) +
-                ", lootBoxes=" + Arrays.toString(lootBoxes) +
+                "\ncurrentTick=" + currentTick +
+                ", \nproperties=" + properties +
+                ", \nlevel=" + level +
+                ", \nplayers=" + Arrays.toString(players) +
+                ", \nunits=" + Arrays.toString(units) +
+                ", \nbullets=" + Arrays.toString(bullets) +
+                ", \nmines=" + Arrays.toString(mines) +
+                ", \nlootBoxes=" + Arrays.toString(lootBoxes) +
                 '}';
     }
 }

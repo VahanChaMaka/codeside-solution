@@ -3,21 +3,15 @@ package model;
 import util.StreamUtil;
 
 public class LootBox {
-    private Vec2Double position;
+    private Point position;
     private Vec2Double size;
     private Item item;
 
     public LootBox() {}
 
-    public LootBox(Vec2Double position, Vec2Double size, Item item) {
-        this.position = position;
-        this.size = size;
-        this.item = item;
-    }
-
     public static LootBox readFrom(java.io.InputStream stream) throws java.io.IOException {
         LootBox result = new LootBox();
-        result.position = Vec2Double.readFrom(stream);
+        result.position = Point.readFrom(stream);
         result.size = Vec2Double.readFrom(stream);
         result.item = Item.readFrom(stream);
         return result;
@@ -29,11 +23,11 @@ public class LootBox {
         item.writeTo(stream);
     }
 
-    public Vec2Double getPosition() {
+    public Point getPosition() {
         return position;
     }
 
-    public void setPosition(Vec2Double position) {
+    public void setPosition(Point position) {
         this.position = position;
     }
 

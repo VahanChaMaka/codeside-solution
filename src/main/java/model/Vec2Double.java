@@ -13,6 +13,12 @@ public class Vec2Double {
         this.y = y;
     }
 
+    //vector from (0,0) to (p.x, p.y)
+    public Vec2Double(Point p){
+        this.x = p.x;
+        this.y = p.y;
+    }
+
     public static Vec2Double readFrom(java.io.InputStream stream) throws java.io.IOException {
         Vec2Double result = new Vec2Double();
         result.x = StreamUtil.readDouble(stream);
@@ -49,9 +55,10 @@ public class Vec2Double {
         return Math.sqrt(x*x + y*y);
     }
 
-    public void scaleThis(double scale){
+    public Vec2Double scaleThis(double scale){
         x = x * scale;
         y = y * scale;
+        return this;
     }
 
     public Vec2Double scale(double scale){

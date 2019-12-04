@@ -6,7 +6,7 @@ public class Unit {
     private int playerId;
     private int id;
     private int health;
-    private Vec2Double position;
+    private Point position;
     private Vec2Double size;
     private JumpState jumpState;
     private boolean walkedRight;
@@ -16,22 +16,10 @@ public class Unit {
     private int mines;
     private Weapon weapon;
 
-    public Unit() {}
-
-    public Unit(int playerId, int id, int health, Vec2Double position, Vec2Double size,
-                JumpState jumpState, boolean walkedRight, boolean stand, boolean onGround,
-                boolean onLadder, int mines, Weapon weapon) {
-        this.playerId = playerId;
-        this.id = id;
-        this.health = health;
-        this.size = size;
-        this.jumpState = jumpState;
-        this.walkedRight = walkedRight;
-        this.stand = stand;
-        this.onGround = onGround;
-        this.onLadder = onLadder;
-        this.mines = mines;
-        this.weapon = weapon;
+    public Unit(){
+        position = new Point(0, 0);
+        size = new Vec2Double(0.9, 1.8);
+        jumpState = new JumpState(true, 0, 0, true);
     }
 
     public static Unit readFrom(java.io.InputStream stream) throws java.io.IOException {
@@ -39,7 +27,7 @@ public class Unit {
         result.playerId = StreamUtil.readInt(stream);
         result.id = StreamUtil.readInt(stream);
         result.health = StreamUtil.readInt(stream);
-        result.position = Vec2Double.readFrom(stream);
+        result.position = Point.readFrom(stream);
         result.size = Vec2Double.readFrom(stream);
         result.jumpState = JumpState.readFrom(stream);
         result.walkedRight = StreamUtil.readBoolean(stream);
@@ -99,16 +87,16 @@ public class Unit {
         this.health = health;
     }
 
-    public Vec2Double getPosition() {
+    public Point getPosition() {
         return position;
     }
 
     //correct position to center
-    public Vec2Double getPositionForShooting(){
-        return position.plus(0, 0.9);
+    public Point getPositionForShooting(){
+        return position.offset(0, 0.9);
     }
 
-    public void setPosition(Vec2Double position) {
+    public void setPosition(Point position) {
         this.position = position;
     }
 

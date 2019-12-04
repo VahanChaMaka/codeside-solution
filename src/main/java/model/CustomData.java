@@ -43,20 +43,17 @@ public abstract class CustomData {
     public static class Rect extends CustomData {
         public static final int TAG = 1;
         private Vec2Float pos;
-        public Vec2Float getPos() { return pos; }
-        public void setPos(Vec2Float pos) { this.pos = pos; }
         private Vec2Float size;
-        public Vec2Float getSize() { return size; }
-        public void setSize(Vec2Float size) { this.size = size; }
         private ColorFloat color;
-        public ColorFloat getColor() { return color; }
-        public void setColor(ColorFloat color) { this.color = color; }
+
         public Rect() {}
-        public Rect(Vec2Double pos, Vec2Double size, ColorFloat color) {
-            this.pos = pos.toFloatVector();
+
+        public Rect(Point pos, Vec2Double size, ColorFloat color) {
+            this.pos = new Vec2Double(pos).toFloatVector();
             this.size = size.toFloatVector();
             this.color = color;
         }
+
         public static Rect readFrom(java.io.InputStream stream) throws java.io.IOException {
             Rect result = new Rect();
             result.pos = Vec2Float.readFrom(stream);
@@ -64,6 +61,31 @@ public abstract class CustomData {
             result.color = ColorFloat.readFrom(stream);
             return result;
         }
+
+        public Vec2Float getPos() {
+            return pos;
+        }
+
+        public void setPos(Vec2Float pos) {
+            this.pos = pos;
+        }
+
+        public Vec2Float getSize() {
+            return size;
+        }
+
+        public void setSize(Vec2Float size) {
+            this.size = size;
+        }
+
+        public ColorFloat getColor() {
+            return color;
+        }
+
+        public void setColor(ColorFloat color) {
+            this.color = color;
+        }
+
         @Override
         public void writeTo(java.io.OutputStream stream) throws java.io.IOException {
             StreamUtil.writeInt(stream, TAG);
@@ -97,8 +119,8 @@ public abstract class CustomData {
             this.color = color;
         }
 
-        public Line(Vec2Double p1, Vec2Double p2, float width, ColorFloat color){
-            this(p1.toFloatVector(), p2.toFloatVector(), width, color);
+        public Line(Point p1, Point p2, float width, ColorFloat color){
+            this(new Vec2Float((float)p1.x, (float)p1.y), new Vec2Float((float)p2.x, (float)p2.y), width, color);
         }
 
         public static Line readFrom(java.io.InputStream stream) throws java.io.IOException {

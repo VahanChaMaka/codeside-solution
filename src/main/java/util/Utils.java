@@ -5,8 +5,8 @@ import model.Vec2Double;
 
 public class Utils {
 
-    public static boolean canHit(Vec2Double position, Vec2Double target, Game game){
-        Vec2Double r = target.minus(position);
+    public static boolean canHit(Point position, Point target, Game game){
+        Vec2Double r = target.buildVector(position);
 
         for (Wall wall : game.getLevel().getWalls()) {
             Vec2Double s = wall.second.minus(wall.first);
@@ -27,7 +27,11 @@ public class Utils {
         return 0;
     }
 
-    public static double distanceSqr(Vec2Double a, Vec2Double b) {
+    public static double distanceSqr(Point a, Point b) {
         return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+    }
+
+    public static double getLargestRootOfQuadraticEquation(double a, double b, double c){
+        return (b+Math.sqrt(b*b - 4*a*c))/(2*a);
     }
 }
