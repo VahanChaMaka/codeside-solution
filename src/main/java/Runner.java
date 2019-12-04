@@ -26,23 +26,29 @@ public class Runner {
     void run() throws IOException {
         MyStrategy myStrategy = new MyStrategy();
         while (true) {
-            ServerMessageGame message = ServerMessageGame.readFrom(inputStream);
-            Logger.log(message.toString());
-            PlayerView playerView = message.getPlayerView();
-            if (playerView == null) {
-                break;
-            }
-            Map<Integer, UnitAction> actions = new HashMap<>();
-            for (Unit unit : playerView.getGame().getUnits()) {
-                if (unit.getPlayerId() == playerView.getMyId()) {
-                    Debug debug = new Debug(outputStream);
-                    myStrategy.update(playerView.getGame(), unit, debug);
-                    UnitAction action = myStrategy.getAction();
-                    Logger.log(action.toString());
-                    actions.put(unit.getId(), action);
+            try {
+                ServerMessageGame message = ServerMessageGame.readFrom(inputStream);
+                Logger.log(message.toString());
+                PlayerView playerView = message.getPlayerView();
+                if (playerView == null) {
+                    break;
+                }
+                Map<Integer, UnitAction> actions = new HashMap<>();
+                for (Unit unit : playerView.getGame().getUnits()) {
+                    if (unit.getPlayerId() == playerView.getMyId()) {
+                        Debug debug = new Debug(outputStream);
+                        myStrategy.update(playerView.getGame(), unit, debug);
+                        UnitAction action = myStrategy.getAction();
+                        Logger.log(action.toString());
+                        actions.put(unit.getId(), action);
+                    }
+                }
+                new PlayerMessageGame.ActionMessage(actions).writeTo(outputStream);
+            } catch (IOException e){
+                if(Logger.isLocalRun){
+                    throw e;
                 }
             }
-            new PlayerMessageGame.ActionMessage(actions).writeTo(outputStream);
             outputStream.flush();
         }
     }
