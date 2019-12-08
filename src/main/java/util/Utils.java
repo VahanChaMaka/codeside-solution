@@ -14,10 +14,10 @@ public class Utils {
     }
 
     public static double getLargestRootOfQuadraticEquation(double a, double b, double c){
-        return (b+Math.sqrt(b*b - 4*a*c))/(2*a);
+        return (-b+Math.sqrt(b*b - 4*a*c))/(2*a);
     }
 
     public static double getSmallestRootOfQuadraticEquation(double a, double b, double c){
-        return (b-Math.sqrt(b*b - 4*a*c))/(2*a);
+        return (-b-Math.sqrt(b*b - 4*a*c))/(2*a);
     }
 }
