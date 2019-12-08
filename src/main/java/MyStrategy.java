@@ -74,6 +74,7 @@ public class MyStrategy {
         action.setJump(jump);
         action.setJumpDown(!jump);
         action.setAim(aim);
+        action.setReload(false);
         action.setShoot(nearestEnemy != null && canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), true));
         action.setSwapWeapon(false);
         action.setPlantMine(false);

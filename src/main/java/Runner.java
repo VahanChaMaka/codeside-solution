@@ -43,7 +43,7 @@ public class Runner {
                         actions.put(unit.getId(), action);
                     }
                 }
-                new PlayerMessageGame.ActionMessage(actions).writeTo(outputStream);
+                new PlayerMessageGame.ActionMessage(new Versioned(actions)).writeTo(outputStream);
             } catch (IOException e){
                 if(Logger.isLocalRun){
                     throw e;

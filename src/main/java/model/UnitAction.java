@@ -8,6 +8,7 @@ public class UnitAction {
     private boolean jumpDown;
     private Vec2Double aim;
     private boolean shoot;
+    private boolean reload;
     private boolean swapWeapon;
     private boolean plantMine;
     
@@ -30,6 +31,7 @@ public class UnitAction {
         result.jumpDown = StreamUtil.readBoolean(stream);
         result.aim = Vec2Double.readFrom(stream);
         result.shoot = StreamUtil.readBoolean(stream);
+        result.reload = StreamUtil.readBoolean(stream);
         result.swapWeapon = StreamUtil.readBoolean(stream);
         result.plantMine = StreamUtil.readBoolean(stream);
         return result;
@@ -41,6 +43,7 @@ public class UnitAction {
         StreamUtil.writeBoolean(stream, jumpDown);
         aim.writeTo(stream);
         StreamUtil.writeBoolean(stream, shoot);
+        StreamUtil.writeBoolean(stream, reload);
         StreamUtil.writeBoolean(stream, swapWeapon);
         StreamUtil.writeBoolean(stream, plantMine);
     }
@@ -99,6 +102,14 @@ public class UnitAction {
 
     public void setPlantMine(boolean plantMine) {
         this.plantMine = plantMine;
+    }
+
+    public boolean isReload() {
+        return reload;
+    }
+
+    public void setReload(boolean reload) {
+        this.reload = reload;
     }
 
     @Override
