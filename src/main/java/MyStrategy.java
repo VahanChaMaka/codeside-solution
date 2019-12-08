@@ -6,7 +6,8 @@ public class MyStrategy {
     private Game game;
     private Debug debug;
 
-    private StateHolder<Unit> previousEnemyStates = new StateHolder<>(4); //holds t(current), t-1, t-2, t-3
+    private static final int STATES_SIZE = 5;
+    private StateHolder<Unit> previousEnemyStates = new StateHolder<>(STATES_SIZE); //holds t(current), t-1, t-2, t-3
 
     public void update(Game game, Unit unit, Debug debug){
         this.game = game;
@@ -31,6 +32,9 @@ public class MyStrategy {
         if (nearestEnemy != null ) {
             if(unit.getWeapon() != null) {
                 Vec2Double predictedEnemyVelocity = predictVelocity();
+                //debug.draw(new CustomData.Line(nearestEnemy.getPositionForShooting(), nearestEnemy.getPositionForShooting().offset(predictedEnemyVelocity.length()*predictedEnemyVelocity.dot(new Vec2Double(1, 0))/predictedEnemyVelocity.length(), 0), 0.05f, ColorFloat.BLUE));//x component
+                //debug.draw(new CustomData.Line(nearestEnemy.getPositionForShooting(), nearestEnemy.getPositionForShooting().offset(0, predictedEnemyVelocity.length()*predictedEnemyVelocity.dot(new Vec2Double(0, 1))/predictedEnemyVelocity.length()), 0.05f, ColorFloat.BLUE));//y component
+                debug.draw(new CustomData.Line(nearestEnemy.getPositionForShooting(), nearestEnemy.getPositionForShooting().offset(predictedEnemyVelocity), 0.05f, ColorFloat.BLUE));
                 //debug.draw(new CustomData.Log("Predicted velocity: " + predictedEnemyVelocity));
 
                 double bulletSpeed = unit.getWeapon().getParams().getBullet().getSpeed();
@@ -132,11 +136,11 @@ public class MyStrategy {
 
         Vec2Double aim = targetPosition.buildVector(unit.getPositionForShooting());
 
-        double spreadAngleHalf = unit.getWeapon().getSpread() / 2;
+        double spreadAngle = unit.getWeapon().getSpread();
         //copy and rotate aim vector counterclock-wise
-        Vec2Double s1 = new Vec2Double(aim.x * Math.cos(spreadAngleHalf) - aim.y * Math.sin(spreadAngleHalf), aim.x * Math.sin(spreadAngleHalf) + aim.y * Math.cos(spreadAngleHalf));
+        Vec2Double s1 = new Vec2Double(aim.x * Math.cos(spreadAngle) - aim.y * Math.sin(spreadAngle), aim.x * Math.sin(spreadAngle) + aim.y * Math.cos(spreadAngle));
         //copy and rotate aim vector clock-wise
-        Vec2Double s2 = new Vec2Double(aim.x * Math.cos(spreadAngleHalf) + aim.y * Math.sin(spreadAngleHalf), -aim.x * Math.sin(spreadAngleHalf) + aim.y * Math.cos(spreadAngleHalf));
+        Vec2Double s2 = new Vec2Double(aim.x * Math.cos(spreadAngle) + aim.y * Math.sin(spreadAngle), -aim.x * Math.sin(spreadAngle) + aim.y * Math.cos(spreadAngle));
 
         double scaler = (s1.length() * aim.length()) / s1.dot(aim);
         s1.scaleThis(scaler);
@@ -189,7 +193,7 @@ public class MyStrategy {
     private Point getIntersection(Point targetPosition, Vec2Double targetVelocity, Point shooterPosition, double bulletSpeed){
         Vec2Double distanceVector = targetPosition.buildVector(shooterPosition);
         double a = bulletSpeed*bulletSpeed - targetVelocity.dot(targetVelocity);
-        double b = -2*targetVelocity.dot(distanceVector);
+        double b = targetVelocity.scale(-2).dot(distanceVector);
         double c = -distanceVector.dot(distanceVector);
 
         /*double root = 0;
@@ -209,7 +213,7 @@ public class MyStrategy {
 
     private Vec2Double predictVelocity(){
         Point currentPosition = previousEnemyStates.get(0).getPositionForShooting();
-        int t = 3;
+        int t = STATES_SIZE-1;
         //prevent failing when collect not enough data
         if(t >= previousEnemyStates.getCurrentSize()){
             t = previousEnemyStates.getCurrentSize()-1;
