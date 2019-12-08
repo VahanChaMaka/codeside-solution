@@ -225,25 +225,11 @@ public class MyStrategy {
     }
 
     public boolean canHit(Point position, Point target, boolean drawIntersection){
-        Vec2Double r = target.buildVector(position);
-
-        for (Wall wall : game.getLevel().getWalls()) {
-            Vec2Double s = wall.second.minus(wall.first);
-            double d = r.x*s.y - s.x*r.y;
-            double u = ((wall.first.x - position.x) * r.y - (wall.first.y - position.y) * r.x) / d;
-            double t = ((wall.first.x - position.x) * s.y - (wall.first.y - position.y) * s.x) / d;
-
-            //check only intersection fact, ignore intersection point
-            if(u >= 0 && u <= 1 && t >= 0 && t <= 1){
-                if(drawIntersection) {
-                    Point intersection = position.offset(r.scale(t));
-                    debug.draw(new CustomData.Rect(intersection, new Vec2Double(0.2, 0.2), ColorFloat.RED));
-                }
-                return false;
-            }
+        Point closestIntersection = Utils.closestIntersection(position, target, game.getLevel().getWalls());
+        if(drawIntersection && closestIntersection != null){
+            debug.draw(new CustomData.Rect(closestIntersection, new Vec2Double(0.2, 0.2), ColorFloat.RED));
         }
-
-        return true;
+        return closestIntersection == null;
     }
 
 }
