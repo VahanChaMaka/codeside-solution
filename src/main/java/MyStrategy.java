@@ -212,6 +212,7 @@ public class MyStrategy {
         return v.scale(bulletSpeed/(v.length()));
     }*/
 
+    //do not consider walls and floor
     private Vec2Double predictVelocity(){
         Point currentPosition = previousEnemyStates.get(0).getPositionForShooting();
         int t = STATES_SIZE-1;
@@ -222,6 +223,16 @@ public class MyStrategy {
 
         Point previousPosition = previousEnemyStates.get(t).getPositionForShooting();
         return currentPosition.buildVector(previousPosition).scaleThis(game.getProperties().getTicksPerSecond()/t);
+    }
+
+    private Vec2Double predictVelocityWithCollision(){
+        Vec2Double rawVelocity = predictVelocity();
+        Point currentPosition = previousEnemyStates.get(0).getPositionForShooting();
+        Point intersection = Utils.closestIntersection(currentPosition, currentPosition.offset(rawVelocity), game.getLevel().getWalls());
+        if(intersection != null){
+            debug.draw(new CustomData.Rect(intersection, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
+        }
+        return null;
     }
 
     public boolean canHit(Point position, Point target, boolean drawIntersection){
