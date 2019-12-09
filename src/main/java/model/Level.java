@@ -73,13 +73,13 @@ public class Level {
                 }
                 if((tiles[i][j] == Tile.WALL && tiles[i][j+1] != Tile.WALL && j != 0) || (j == tiles[0].length-2 && startPoint != null)){
                     Point endPoint = new Point(i, j+1);
-                    Wall leftWall = new Wall(startPoint,  endPoint);
+                    Wall leftWall = new Wall(startPoint,  endPoint, true);
                     if(startPoint == null){
                         Logger.log("Error while building walls: " + i + ", " + j);
                         Logger.log(this.toString());
                     }
                     Wall rightWall = new Wall(new Point(startPoint.x+1, startPoint.y),
-                            new Point(endPoint.x+1, endPoint.y));
+                            new Point(endPoint.x+1, endPoint.y), true);
 
                     if(i != 0 && tiles[i-1][j] != Tile.WALL) {
                         walls.add(leftWall);
@@ -107,9 +107,9 @@ public class Level {
                     }
 
                     Point endPoint = new Point(i+1, j);
-                    Wall bottom = new Wall(startPoint,  endPoint);
+                    Wall bottom = new Wall(startPoint,  endPoint, false);
                     Wall top = new Wall(new Point(startPoint.x, startPoint.y+1),
-                            new Point(endPoint.x, endPoint.y+1));
+                            new Point(endPoint.x, endPoint.y+1), false);
 
                     walls.add(top);
                     startPoint = null;
@@ -118,7 +118,7 @@ public class Level {
         }
 
         //ceiling
-        walls.add(new Wall(new Point(0, tiles[0].length - 1), new Point(tiles.length-1, tiles[0].length - 1)));
+        walls.add(new Wall(new Point(0, tiles[0].length - 1), new Point(tiles.length-1, tiles[0].length - 1), false));
     }
 
     public Tile[][] getTiles() {

@@ -1,4 +1,5 @@
 import model.*;
+import util.Debug;
 import util.Utils;
 
 public class MyStrategy {
@@ -28,22 +29,24 @@ public class MyStrategy {
 
         Point targetPos = unit.getPosition();
 
+        boolean shoot = false;
         Vec2Double aim = new Vec2Double(-1, -1);
         if (nearestEnemy != null ) {
             if(unit.getWeapon() != null) {
-                Vec2Double predictedEnemyVelocity = predictVelocity();
-                //debug.draw(new CustomData.Line(nearestEnemy.getPositionForShooting(), nearestEnemy.getPositionForShooting().offset(predictedEnemyVelocity.length()*predictedEnemyVelocity.dot(new Vec2Double(1, 0))/predictedEnemyVelocity.length(), 0), 0.05f, ColorFloat.BLUE));//x component
-                //debug.draw(new CustomData.Line(nearestEnemy.getPositionForShooting(), nearestEnemy.getPositionForShooting().offset(0, predictedEnemyVelocity.length()*predictedEnemyVelocity.dot(new Vec2Double(0, 1))/predictedEnemyVelocity.length()), 0.05f, ColorFloat.BLUE));//y component
-                debug.draw(new CustomData.Line(nearestEnemy.getPositionForShooting(), nearestEnemy.getPositionForShooting().offset(predictedEnemyVelocity), 0.05f, ColorFloat.BLUE));
-                //debug.draw(new CustomData.Log("Predicted velocity: " + predictedEnemyVelocity));
 
-                double bulletSpeed = unit.getWeapon().getParams().getBullet().getSpeed();
-                Point intersection = getIntersection(nearestEnemy.getPositionForShooting(), predictedEnemyVelocity, unit.getPositionForShooting(), bulletSpeed);
+                aim = buildAimVector(nearestEnemy, predictVelocity());
+                shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
+                //if bullet will hit wall/floor, try to predict enemy's velocity with collisions
+                if(!shoot){
+                    Vec2Double predictedVelocityWithCollision = predictVelocityWithCollision();
+                    if(predictedVelocityWithCollision != null) {
+                        aim = buildAimVector(nearestEnemy, predictedVelocityWithCollision);
+                        shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
+                    }
+                }
 
-                aim = intersection.buildVector(unit.getPositionForShooting());
-
+                Point intersection = unit.getPositionForShooting().offset(aim);
                 targetPos = buildPositionForShooting(nearestEnemy, intersection);
-                debug.draw(new CustomData.Line(unit.getPositionForShooting(), intersection, 0.05f, ColorFloat.GREEN));
             } else {//look at the enemy without a weapon to reduce spread on the first shot
                 aim = new Vec2Double(nearestEnemy.getPositionForShooting().x - unit.getPositionForShooting().x,
                   nearestEnemy.getPositionForShooting().y - unit.getPositionForShooting().y);
@@ -75,7 +78,7 @@ public class MyStrategy {
         action.setJumpDown(!jump);
         action.setAim(aim);
         action.setReload(false);
-        action.setShoot(nearestEnemy != null && canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), true));
+        action.setShoot(shoot);
         action.setSwapWeapon(false);
         action.setPlantMine(false);
         return action;
@@ -181,7 +184,7 @@ public class MyStrategy {
         double distanceToEnemy = predictedPosition.buildVector(unit.getPositionForShooting()).length();
         //debug.draw(new CustomData.Log("Hit chance: " + hitChance));
 
-        if(!canHit(unit.getPositionForShooting(), predictedPosition, true) || hitChance < 0.5){
+        if(!canHit(unit.getPositionForShooting(), predictedPosition, unit.getWeapon(), true) || hitChance < 0.5){
             return enemy.getPosition();
         } else if(distanceToEnemy < 4){//not sure if it's a good idea
             return unit.getPositionForShooting().offset(Math.signum(unit.getPositionForShooting().buildVector(enemy.getPositionForShooting()).x), 0);
@@ -222,25 +225,57 @@ public class MyStrategy {
         }
 
         Point previousPosition = previousEnemyStates.get(t).getPositionForShooting();
-        return currentPosition.buildVector(previousPosition).scaleThis(game.getProperties().getTicksPerSecond()/t);
+        Vec2Double predictedEnemyVelocity = currentPosition.buildVector(previousPosition).scaleThis(game.getProperties().getTicksPerSecond()/t);
+        debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(predictedEnemyVelocity), 0.05f, ColorFloat.BLUE));
+        return predictedEnemyVelocity;
     }
 
     private Vec2Double predictVelocityWithCollision(){
         Vec2Double rawVelocity = predictVelocity();
         Point currentPosition = previousEnemyStates.get(0).getPositionForShooting();
-        Point intersection = Utils.closestIntersection(currentPosition, currentPosition.offset(rawVelocity), game.getLevel().getWalls());
+        Intersection intersection = Utils.closestIntersectionBox(currentPosition, currentPosition.offset(rawVelocity),
+                game.getLevel().getWalls(), unit.getSize());
         if(intersection != null){
-            debug.draw(new CustomData.Rect(intersection, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
+            Point intPoint = intersection.point;
+            debug.draw(new CustomData.Rect(intPoint, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
+            Vec2Double beforeInt = intPoint.buildVector(currentPosition);
+
+            //remained velocity after intersection
+            Vec2Double afterInt = rawVelocity.minus(beforeInt);
+            if(intersection.wall.isVertical){
+                afterInt.x = 0;
+            } else {
+                afterInt.y = 0;
+            }
+
+            debug.draw(new CustomData.Line(intPoint, intPoint.offset(afterInt), 0.05f, ColorFloat.BLUE));
+            Vec2Double finalVelocity = beforeInt.plus(afterInt);
+            debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(finalVelocity), 0.05f, ColorFloat.BLUE));
+            return finalVelocity;
         }
         return null;
     }
 
-    public boolean canHit(Point position, Point target, boolean drawIntersection){
-        Point closestIntersection = Utils.closestIntersection(position, target, game.getLevel().getWalls());
+    public boolean canHit(Point position, Point target, Weapon weapon, boolean drawIntersection){
+        if (weapon == null){
+            return false;
+        }
+
+        double bulletSize = weapon.getParams().getBullet().getSize();
+        Intersection closestIntersection = Utils.closestIntersectionBox(position, target, game.getLevel().getWalls(), new Vec2Double(bulletSize, bulletSize));
         if(drawIntersection && closestIntersection != null){
-            debug.draw(new CustomData.Rect(closestIntersection, new Vec2Double(0.2, 0.2), ColorFloat.RED));
+            debug.draw(new CustomData.Rect(closestIntersection.point, new Vec2Double(0.2, 0.2), ColorFloat.RED));
         }
         return closestIntersection == null;
+    }
+
+    public Vec2Double buildAimVector(Unit nearestEnemy, Vec2Double predictedEnemyVelocity){
+        double bulletSpeed = unit.getWeapon().getParams().getBullet().getSpeed();
+        Point intersection = getIntersection(nearestEnemy.getPositionForShooting(), predictedEnemyVelocity, unit.getPositionForShooting(), bulletSpeed);
+
+        Vec2Double aim = intersection.buildVector(unit.getPositionForShooting());
+        debug.draw(new CustomData.Line(unit.getPositionForShooting(), intersection, 0.05f, ColorFloat.GREEN));
+        return aim;
     }
 
 }
