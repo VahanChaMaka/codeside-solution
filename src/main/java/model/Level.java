@@ -64,22 +64,22 @@ public class Level {
         walls.clear();
         //vertical ones
         for (int i = 0; i < tiles.length; i++) {
-            Vec2Double startPoint = null;
+            Point startPoint = null;
             for (int j = 0; j < tiles[i].length - 1; j++) {
                 if(startPoint == null
                         && (tiles[i][j] != Tile.WALL || i == 0 || j == 0)
                         && tiles[i][j+1] == Tile.WALL){
-                    startPoint = new Vec2Double(i, j+1);
+                    startPoint = new Point(i, j+1);
                 }
-                if(tiles[i][j] == Tile.WALL && tiles[i][j+1] != Tile.WALL && j != 0){
-                    Vec2Double endPoint = new Vec2Double(i, j+1);
+                if((tiles[i][j] == Tile.WALL && tiles[i][j+1] != Tile.WALL && j != 0) || (j == tiles[0].length-2 && startPoint != null)){
+                    Point endPoint = new Point(i, j+1);
                     Wall leftWall = new Wall(startPoint,  endPoint);
                     if(startPoint == null){
                         Logger.log("Error while building walls: " + i + ", " + j);
                         Logger.log(this.toString());
                     }
-                    Wall rightWall = new Wall(new Vec2Double(startPoint.x+1, startPoint.y),
-                            new Vec2Double(endPoint.x+1, endPoint.y));
+                    Wall rightWall = new Wall(new Point(startPoint.x+1, startPoint.y),
+                            new Point(endPoint.x+1, endPoint.y));
 
                     if(i != 0 && tiles[i-1][j] != Tile.WALL) {
                         walls.add(leftWall);
@@ -87,11 +87,38 @@ public class Level {
                     if(i < tiles.length-1 && tiles[i+1][j] != Tile.WALL) {
                         walls.add(rightWall);
                     }
+                    startPoint = null;
                 }
             }
         }
 
-        //TODO: horizontal walls
+        for (int j = 0; j < tiles[0].length ; j++) { //for every row
+            Point startPoint = null;
+            for (int i = 0; i < tiles.length - 1; i++) {
+                if(startPoint == null
+                        && (tiles[i][j] != Tile.WALL || i == 0 || j == 0)
+                        && tiles[i+1][j] == Tile.WALL){
+                    startPoint = new Point(i+1, j);
+                }
+                if((tiles[i][j] == Tile.WALL && tiles[i+1][j] != Tile.WALL && i != 0) || (i == tiles.length-2 && startPoint != null && j != tiles[0].length-1)){
+                    if(startPoint == null){
+                        Logger.log("Error while building walls: " + i + ", " + j);
+                        Logger.log(this.toString());
+                    }
+
+                    Point endPoint = new Point(i+1, j);
+                    Wall bottom = new Wall(startPoint,  endPoint);
+                    Wall top = new Wall(new Point(startPoint.x, startPoint.y+1),
+                            new Point(endPoint.x, endPoint.y+1));
+
+                    walls.add(top);
+                    startPoint = null;
+                }
+            }
+        }
+
+        //ceiling
+        walls.add(new Wall(new Point(0, tiles[0].length - 1), new Point(tiles.length-1, tiles[0].length - 1)));
     }
 
     public Tile[][] getTiles() {

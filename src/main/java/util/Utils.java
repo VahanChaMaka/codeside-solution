@@ -29,7 +29,7 @@ public class Utils {
 
         Point closest = null;
         for (Wall wall : walls) {
-            Vec2Double s = wall.second.minus(wall.first);
+            Vec2Double s = wall.second.buildVector(wall.first);
             double d = r.x*s.y - s.x*r.y;
             double u = ((wall.first.x - source.x) * r.y - (wall.first.y - source.y) * r.x) / d;
             double t = ((wall.first.x - source.x) * s.y - (wall.first.y - source.y) * s.x) / d;
