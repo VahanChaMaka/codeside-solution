@@ -25,7 +25,7 @@ public class MyStrategy {
             debug.draw(new CustomData.Log("Enemy pos:" + nearestEnemy.getPosition()));
         }
 
-        LootBox nearestWeapon = getNearestWeapon();
+        LootBox nearestWeapon = getNearestLootBox(Item.Weapon.class);
 
         Point targetPos = unit.getPosition();
 
@@ -61,6 +61,13 @@ public class MyStrategy {
         }
         debug.draw(new CustomData.Log("Target pos: " + targetPos));
 
+        if(unit.getHealth() < 75){
+            LootBox nearestHealthPack = getNearestLootBox(Item.HealthPack.class);
+            if(nearestHealthPack != null){
+                targetPos = nearestHealthPack.getPosition();
+            }
+        }
+
         boolean jump = targetPos.y > unit.getPosition().y;
         if (targetPos.x > unit.getPosition().x && game.getLevel()
               .getTiles()[(int) (unit.getPosition().x + 1)][(int) (unit.getPosition().y)] == Tile.WALL) {
@@ -84,17 +91,17 @@ public class MyStrategy {
         return action;
     }
 
-    private LootBox getNearestWeapon(){
-        LootBox nearestWeapon = null;
+    private LootBox getNearestLootBox(Class<? extends Item> itemClass){
+        LootBox nearestLootBox = null;
         for (LootBox lootBox : game.getLootBoxes()) {
-          if (lootBox.getItem() instanceof Item.Weapon) {
-            if (nearestWeapon == null || Utils.distanceSqr(unit.getPosition(),
-                    lootBox.getPosition()) < Utils.distanceSqr(unit.getPosition(), nearestWeapon.getPosition())) {
-              nearestWeapon = lootBox;
+            if (itemClass.isInstance(lootBox.getItem() )) {
+                if (nearestLootBox == null || Utils.distanceSqr(unit.getPosition(),
+                        lootBox.getPosition()) < Utils.distanceSqr(unit.getPosition(), nearestLootBox.getPosition())) {
+                    nearestLootBox = lootBox;
+                }
             }
-          }
         }
-        return nearestWeapon;
+        return nearestLootBox;
     }
 
     private Unit getNearestEnemy(){
