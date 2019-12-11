@@ -32,6 +32,7 @@ public class MyStrategy {
         boolean shoot = false;
         Vec2Double aim = new Vec2Double(-1, -1);
         if (nearestEnemy != null ) {
+            buildAimVectorNew(nearestEnemy);
             if(unit.getWeapon() != null) {
 
                 aim = buildAimVector(nearestEnemy, predictVelocity());
@@ -255,14 +256,15 @@ public class MyStrategy {
                 afterInt.y = 0;
             }
 
-            debug.draw(new CustomData.Line(intPoint, intPoint.offset(afterInt), 0.05f, ColorFloat.BLUE));
+            //debug.draw(new CustomData.Line(intPoint, intPoint.offset(afterInt), 0.05f, ColorFloat.BLUE));
             Vec2Double finalVelocity = beforeInt.plus(afterInt);
-            debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(finalVelocity), 0.05f, ColorFloat.BLUE));
+            //debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(finalVelocity), 0.05f, ColorFloat.BLUE));
             return finalVelocity;
         }
         return null;
     }
 
+    //TODO: when shooting from ladder/jump, first bullet always hits wall
     public boolean canHit(Point position, Point target, Weapon weapon, boolean drawIntersection){
         if (weapon == null){
             return false;
@@ -283,6 +285,13 @@ public class MyStrategy {
         Vec2Double aim = intersection.buildVector(unit.getPositionForShooting());
         debug.draw(new CustomData.Line(unit.getPositionForShooting(), intersection, 0.05f, ColorFloat.GREEN));
         return aim;
+    }
+
+    public Vec2Double buildAimVectorNew(Unit enemy){
+        Path path = Path.buildPath_(enemy, predictVelocity(), game, debug);
+        Point predictedPosition = path.getPositionAtTick(200);
+        debug.draw(new CustomData.Rect(predictedPosition,  new Vec2Double(0.2, 0.2), ColorFloat.YELLOW));
+        return null;
     }
 
 }
