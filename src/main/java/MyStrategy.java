@@ -32,7 +32,9 @@ public class MyStrategy {
         boolean shoot = false;
         Vec2Double aim = new Vec2Double(-1, -1);
         if (nearestEnemy != null ) {
-            buildAimVectorNew(nearestEnemy);
+            if(game.getCurrentTick() > 10) {
+                buildAimVectorNew(nearestEnemy);
+            }
             if(unit.getWeapon() != null) {
 
                 aim = buildAimVector(nearestEnemy, predictVelocity());
@@ -53,7 +55,7 @@ public class MyStrategy {
                   nearestEnemy.getPositionForShooting().y - unit.getPositionForShooting().y);
             }
 
-            debug.draw(new CustomData.Line(unit.getPositionForShooting(), nearestEnemy.getPositionForShooting(), 0.05f, ColorFloat.YELLOW));
+            //debug.draw(new CustomData.Line(unit.getPositionForShooting(), nearestEnemy.getPositionForShooting(), 0.05f, ColorFloat.YELLOW));
         }
 
         //take weapon if have no any
@@ -288,9 +290,21 @@ public class MyStrategy {
     }
 
     public Vec2Double buildAimVectorNew(Unit enemy){
-        Path path = Path.buildPath_(enemy, predictVelocity(), game, debug);
-        Point predictedPosition = path.getPositionAtTick(200);
-        debug.draw(new CustomData.Rect(predictedPosition,  new Vec2Double(0.2, 0.2), ColorFloat.YELLOW));
+        Path path = Path.buildPath(enemy, predictVelocity(), game, debug);
+        double bulletSpeed = unit.getWeapon().getParams().getBullet().getSpeed();
+        Point enemyLeftBotCorner = enemy.getPosition().offset(enemy.getSize().x/2, 0);
+
+        //simulate for 20 ticks
+        //TODO: it's some weird shit with time
+        for (int i = 0; i < 2000; i++) {
+            Point predictedPosition = path.getPositionAtTick(2000);
+            Vec2Double bulletVec = predictedPosition.buildVector(unit.getPositionForShooting()).normalizeThis().scaleThis(bulletSpeed);
+            Point bulletPosition = unit.getPositionForShooting().offset(bulletVec);
+            if(Utils.isPointInsideRect(bulletPosition, enemyLeftBotCorner, enemy.getSize())){
+                return bulletVec;
+            }
+        }
+
         return null;
     }
 

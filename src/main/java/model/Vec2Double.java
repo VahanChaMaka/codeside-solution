@@ -69,6 +69,10 @@ public class Vec2Double {
         return scale(1/length());
     }
 
+    public Vec2Double normalizeThis(){
+        return scaleThis(1/length());
+    }
+
     public Vec2Float toFloatVector(){
         return new Vec2Float((float)x, (float)y);
     }

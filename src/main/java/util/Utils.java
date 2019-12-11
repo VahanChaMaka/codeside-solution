@@ -64,4 +64,10 @@ public class Utils {
 
         return new Intersection(intersection.point.offset(offsetVec), intersection.wall);
     }
+
+    public static boolean isPointInsideRect(Point point, Point leftBotCorner, Vec2Double rectSize){
+        Point rightUpCorner = point.offset(rectSize);
+        return point.x >= leftBotCorner.x && point.x <= rightUpCorner.x
+                && point.y >= leftBotCorner.y && point.y <= rightUpCorner.y;
+    }
 }

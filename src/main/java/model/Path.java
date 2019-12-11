@@ -69,45 +69,6 @@ public class Path {
     }
 
     public static Path buildPath(Unit unit, Vec2Double predictedVelocity, Game game, Debug debug){
-        List<Vec2Double> path = new ArrayList<>(2);
-        Point currentPosition = unit.getPositionForShooting();
-        Intersection intersection = Utils.closestIntersectionBox(currentPosition, currentPosition.offset(predictedVelocity),
-                game.getLevel().getWalls(), unit.getSize());
-        if(intersection != null){
-            Point intPoint = intersection.point;
-            debug.draw(new CustomData.Rect(intPoint, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
-            Vec2Double beforeInt = intPoint.buildVector(currentPosition);
-
-            //remained velocity after intersection
-            Vec2Double afterInt = predictedVelocity.minus(beforeInt);
-            if(intersection.wall.isVertical){
-                afterInt.x = 0;
-            } else {
-                afterInt.y = 0;
-            }
-            debug.draw(new CustomData.Line(intPoint, intPoint.offset(afterInt), 0.05f, ColorFloat.BLUE));
-
-            path.add(beforeInt);
-            path.add(afterInt);
-        } else if(unit.getJumpState().getMaxTime() != 0){
-            double maxTime = unit.getJumpState().getMaxTime();
-            Vec2Double maxJumpVector = new Vec2Double(predictedVelocity.x*maxTime, predictedVelocity.y*maxTime);
-            Vec2Double afterMaxHeight = predictedVelocity.minus(maxJumpVector);
-            afterMaxHeight.y = -afterMaxHeight.y;//invert vertical speed
-
-            debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(maxJumpVector), 0.05f, ColorFloat.YELLOW));
-            debug.draw(new CustomData.Line(currentPosition.offset(maxJumpVector), currentPosition.offset(maxJumpVector).offset(afterMaxHeight), 0.05f, ColorFloat.YELLOW));
-
-            path.add(maxJumpVector);
-            path.add(afterMaxHeight);
-        } else{
-            path.add(predictedVelocity);
-        }
-
-        return new Path(path, currentPosition, game.getProperties().getUpdatesPerTick(), game.getProperties().getTicksPerSecond());
-    }
-
-    public static Path buildPath_(Unit unit, Vec2Double predictedVelocity, Game game, Debug debug){
         List<Vec2Double> path = new ArrayList<>(3);
         Point currentPosition = unit.getPositionForShooting();
 
@@ -116,10 +77,10 @@ public class Path {
             double maxTime = unit.getJumpState().getMaxTime();
             Vec2Double maxJumpVector = new Vec2Double(predictedVelocity.x*maxTime, predictedVelocity.y*maxTime);
             Vec2Double afterMaxHeight = predictedVelocity.minus(maxJumpVector);
-            afterMaxHeight.y = -afterMaxHeight.y;//invert vertical speed
+            afterMaxHeight.y = -game.getProperties().getUnitFallSpeed();//falling down
 
-            debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(maxJumpVector), 0.05f, ColorFloat.YELLOW));
-            debug.draw(new CustomData.Line(currentPosition.offset(maxJumpVector), currentPosition.offset(maxJumpVector).offset(afterMaxHeight), 0.05f, ColorFloat.YELLOW));
+            //debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(maxJumpVector), 0.05f, ColorFloat.YELLOW));
+            //debug.draw(new CustomData.Line(currentPosition.offset(maxJumpVector), currentPosition.offset(maxJumpVector).offset(afterMaxHeight), 0.05f, ColorFloat.YELLOW));
 
             //path.add(maxJumpVector);
             //check collision
@@ -135,10 +96,32 @@ public class Path {
                 positionAfterFirstPart = positionAfterFirstPart.offset(vec2Double);
             }
             List<Vec2Double> splitSecond = splitOnCollision(positionAfterFirstPart, afterMaxHeight, unit.getSize(), game);
-            if(splitFirst.size() > 1){//collision has occurred in the second part
+            if(splitSecond.size() > 1){//collision has occurred in the second part
                 path.addAll(splitSecond);
             } else {
                 path.add(afterMaxHeight);
+            }
+        } else {
+            Intersection intersection = Utils.closestIntersectionBox(currentPosition, currentPosition.offset(predictedVelocity),
+                    game.getLevel().getWalls(), unit.getSize());
+            if(intersection != null) {
+                Point intPoint = intersection.point;
+                debug.draw(new CustomData.Rect(intPoint, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
+                Vec2Double beforeInt = intPoint.buildVector(currentPosition);
+
+                //remained velocity after intersection
+                Vec2Double afterInt = predictedVelocity.minus(beforeInt);
+                if (intersection.wall.isVertical) {
+                    afterInt.x = 0;
+                } else {
+                    afterInt.y = 0;
+                }
+                debug.draw(new CustomData.Line(intPoint, intPoint.offset(afterInt), 0.05f, ColorFloat.BLUE));
+
+                path.add(beforeInt);
+                path.add(afterInt);
+            } else {
+                path.add(predictedVelocity);
             }
         }
 
@@ -166,7 +149,7 @@ public class Path {
                 afterInt.x = 0;
             } else {
                 if(afterInt.y > 0){ //ceiling, falling back
-                    afterInt.y = -afterInt.y;
+                    afterInt.y = - game.getProperties().getUnitFallSpeed();
                 } else { //floor
                     afterInt.y = 0;
                 }
