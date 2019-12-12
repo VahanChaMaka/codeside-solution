@@ -13,6 +13,7 @@ public class Path {
     private double ticksPerSecond;
     private int updatesPerTick;
     private List<Vec2Double> directions;
+    private List<Point> path;
     private Point startPosition;
 
     private Path(List<Vec2Double> directions, Point startPosition, int updatesPerTick, double ticksPerSecond) {
@@ -35,37 +36,50 @@ public class Path {
     }
 
     public Point getPositionAtMicroTick(int microtick){
-        microtick = microtick/10; //I have no idea why :)
+        return path.get(microtick);
+    }
+
+    private Vec2Double normalizeToMicroTick(Vec2Double velocity, double fullLength){
+        return velocity.scale((velocity.length()/fullLength)/(ticksPerSecond*updatesPerTick));
+    }
+
+    private void convertToPoints(Debug debug){
+        double fullLength = 0;
+        for (Vec2Double direction : directions) {
+            fullLength += direction.length();
+        }
+
+        path = new ArrayList<>();
         Iterator<Vec2Double> pathIterator = directions.iterator();
         Point position = startPosition;
         Vec2Double activePathPart = pathIterator.next();
-        Vec2Double activeNorm = normalizeToMicroTick(activePathPart); //normalize to microticks
+        Vec2Double activeNorm = normalizeToMicroTick(activePathPart, fullLength); //normalize to microticks
         Point activePartStart = startPosition;
         Point activePartEnd = startPosition.offset(activePathPart);
 
-        for (int i = 0; i <= microtick; i++) {
+        path.add(startPosition);
+        for (int i = 0; i < 60000; i++) { // 60 tics
             Point tmpPosition = position.offset(activeNorm);
             if(tmpPosition.buildVector(activePartStart).length() <= activePartEnd.buildVector(activePartStart).length()){//we are at the same vector
                 position = tmpPosition;
+                path.add(position);
             } else { //take the next vector
                 if(pathIterator.hasNext()){
                     activePathPart = pathIterator.next();
-                    activeNorm = normalizeToMicroTick(activePathPart);
+                    activeNorm = normalizeToMicroTick(activePathPart, fullLength);
                     activePartStart = activePartEnd; //new vector starts where previous ends
                     activePartEnd = activePartStart.offset(activePathPart);
                     position = activePartStart; //switch position to new vector start. It can lead to some inaccuracy :)
+                    path.add(position);
                 } else {
-                    Logger.log("Warning! Trying to get position which is too far! Microtick: " + microtick);
-                    return position;
+                    Logger.log("Warning! Trying to get position which is too far! Microtick: " + i);
+                    return;
                 }
             }
+            if(Logger.isLocalRun && i % 60 == 0) {
+                debug.draw(new CustomData.Rect(path.get(i), new Vec2Double(0.1, 0.1), ColorFloat.RED));
+            }
         }
-
-        return position;
-    }
-
-    private Vec2Double normalizeToMicroTick(Vec2Double velocity){
-        return velocity.getNormalized().scaleThis(1/(ticksPerSecond*updatesPerTick));
     }
 
     public static Path buildPath(Unit unit, Vec2Double predictedVelocity, Game game, Debug debug){
@@ -132,7 +146,9 @@ public class Path {
             vecStart = vecEnd;
         }
 
-        return new Path(path, currentPosition, game.getProperties().getUpdatesPerTick(), game.getProperties().getTicksPerSecond());
+        Path toReturn = new Path(path, currentPosition, game.getProperties().getUpdatesPerTick(), game.getProperties().getTicksPerSecond());
+        toReturn.convertToPoints(debug);
+        return toReturn;
     }
 
     private static List<Vec2Double> splitOnCollision(Point startPoint, Vec2Double vector, Vec2Double size, Game game){

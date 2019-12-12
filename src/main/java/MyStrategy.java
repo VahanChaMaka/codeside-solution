@@ -1,5 +1,6 @@
 import model.*;
 import util.Debug;
+import util.Logger;
 import util.Utils;
 
 public class MyStrategy {
@@ -32,10 +33,10 @@ public class MyStrategy {
         boolean shoot = false;
         Vec2Double aim = new Vec2Double(-1, -1);
         if (nearestEnemy != null ) {
-            if(game.getCurrentTick() > 10) {
-                buildAimVectorNew(nearestEnemy);
-            }
             if(unit.getWeapon() != null) {
+                if(game.getCurrentTick() > 10) {
+                    buildAimVectorNew(nearestEnemy);
+                }
 
                 aim = buildAimVector(nearestEnemy, predictVelocity());
                 shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
@@ -285,22 +286,27 @@ public class MyStrategy {
         Point intersection = getIntersection(nearestEnemy.getPositionForShooting(), predictedEnemyVelocity, unit.getPositionForShooting(), bulletSpeed);
 
         Vec2Double aim = intersection.buildVector(unit.getPositionForShooting());
-        debug.draw(new CustomData.Line(unit.getPositionForShooting(), intersection, 0.05f, ColorFloat.GREEN));
+        //debug.draw(new CustomData.Line(unit.getPositionForShooting(), intersection, 0.05f, ColorFloat.GREEN));
         return aim;
     }
 
     public Vec2Double buildAimVectorNew(Unit enemy){
         Path path = Path.buildPath(enemy, predictVelocity(), game, debug);
         double bulletSpeed = unit.getWeapon().getParams().getBullet().getSpeed();
-        Point enemyLeftBotCorner = enemy.getPosition().offset(enemy.getSize().x/2, 0);
 
         //simulate for 20 ticks
         //TODO: it's some weird shit with time
-        for (int i = 0; i < 2000; i++) {
-            Point predictedPosition = path.getPositionAtTick(2000);
+        for (int i = 0; i < 5000; i++) {
+            Point predictedPosition = path.getPositionAtMicroTick(i);
+            Point enemyLeftBotCorner = predictedPosition.offset(enemy.getSize().x/2, 0);
             Vec2Double bulletVec = predictedPosition.buildVector(unit.getPositionForShooting()).normalizeThis().scaleThis(bulletSpeed);
             Point bulletPosition = unit.getPositionForShooting().offset(bulletVec);
+
+            if(i % 60 == 0){
+                Logger.log("Pred pos: " + predictedPosition + " , bul pos: " + bulletPosition);
+            }
             if(Utils.isPointInsideRect(bulletPosition, enemyLeftBotCorner, enemy.getSize())){
+                debug.draw(new CustomData.Line(unit.getPositionForShooting(), bulletPosition, 0.05f, new ColorFloat(1, 1, 1, 1)));
                 return bulletVec;
             }
         }
