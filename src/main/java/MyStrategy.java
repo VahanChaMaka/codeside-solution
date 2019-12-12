@@ -237,7 +237,7 @@ public class MyStrategy {
 
         Point previousPosition = previousEnemyStates.get(t).getPositionForShooting();
         Vec2Double predictedEnemyVelocity = currentPosition.buildVector(previousPosition).scaleThis(game.getProperties().getTicksPerSecond()/t);
-        debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(predictedEnemyVelocity), 0.05f, ColorFloat.BLUE));
+        //debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(predictedEnemyVelocity), 0.05f, ColorFloat.BLUE));
         return predictedEnemyVelocity;
     }
 
@@ -293,22 +293,33 @@ public class MyStrategy {
     public Vec2Double buildAimVectorNew(Unit enemy){
         Path path = Path.buildPath(enemy, predictVelocity(), game, debug);
         double bulletSpeed = unit.getWeapon().getParams().getBullet().getSpeed();
+        double minDistance = Double.MAX_VALUE;
 
-        //simulate for 20 ticks
-        //TODO: it's some weird shit with time
+        //simulate for 50 ticks
         for (int i = 0; i < 5000; i++) {
             Point predictedPosition = path.getPositionAtMicroTick(i);
-            Point enemyLeftBotCorner = predictedPosition.offset(enemy.getSize().x/2, 0);
+            //Point enemyLeftBotCorner = predictedPosition.offset(enemy.getSize().x/2, enemy.getSize().y/2);
             Vec2Double bulletVec = predictedPosition.buildVector(unit.getPositionForShooting()).normalizeThis().scaleThis(bulletSpeed);
-            Point bulletPosition = unit.getPositionForShooting().offset(bulletVec);
+            Vec2Double bulletVecMcrtck = bulletVec.scale(1/(game.getProperties().getTicksPerSecond()*game.getProperties().getUpdatesPerTick()));
+            Point bulletPosition = unit.getPositionForShooting().offset(bulletVecMcrtck.scaleThis(i));
+            double distance = predictedPosition.buildVector(bulletPosition).length();
 
-            if(i % 60 == 0){
-                Logger.log("Pred pos: " + predictedPosition + " , bul pos: " + bulletPosition);
+            if(distance < minDistance){
+                minDistance = distance;
+            } else {
+                debug.draw(new CustomData.Line(unit.getPositionForShooting(), predictedPosition, 0.05f, new ColorFloat(1, 1, 1, 1)));
+                return predictedPosition.buildVector(unit.getPositionForShooting());
             }
-            if(Utils.isPointInsideRect(bulletPosition, enemyLeftBotCorner, enemy.getSize())){
+
+            if(i % 300 == 0){
+                Logger.log("Pred pos: " + predictedPosition + " , bul pos: " + bulletPosition);
+                //debug.draw(new CustomData.Rect(predictedPosition, new Vec2Double(0.1f, 0.1f), ColorFloat.RED));
+            }
+
+            /*if(Utils.isPointInsideRect(bulletPosition, enemyLeftBotCorner, enemy.getSize())){
                 debug.draw(new CustomData.Line(unit.getPositionForShooting(), bulletPosition, 0.05f, new ColorFloat(1, 1, 1, 1)));
                 return bulletVec;
-            }
+            }*/
         }
 
         return null;

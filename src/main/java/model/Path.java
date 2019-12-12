@@ -4,31 +4,18 @@ import util.Debug;
 import util.Logger;
 import util.Utils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class Path {
     private double ticksPerSecond;
     private int updatesPerTick;
-    private List<Vec2Double> directions;
+    private List<PointToVel> milestones;
     private List<Point> path;
-    private Point startPosition;
 
-    private Path(List<Vec2Double> directions, Point startPosition, int updatesPerTick, double ticksPerSecond) {
-        this.directions = directions;
-        this.startPosition = startPosition;
+    private Path(List<PointToVel> milestones, int updatesPerTick, double ticksPerSecond) {
+        this.milestones = milestones;
         this.updatesPerTick = updatesPerTick;
         this.ticksPerSecond = ticksPerSecond;
-    }
-
-    public List<Vec2Double> getDirections() {
-        return directions;
-    }
-
-    public Point getStartPosition() {
-        return startPosition;
     }
 
     public Point getPositionAtTick(int tick){
@@ -39,81 +26,88 @@ public class Path {
         return path.get(microtick);
     }
 
-    private Vec2Double normalizeToMicroTick(Vec2Double velocity, double fullLength){
-        return velocity.scale((velocity.length()/fullLength)/(ticksPerSecond*updatesPerTick));
+    private Vec2Double normalizeToMicroTick(Vec2Double velocity){
+        return velocity.scale(1/(ticksPerSecond*updatesPerTick));
     }
 
     private void convertToPoints(Debug debug){
-        double fullLength = 0;
-        for (Vec2Double direction : directions) {
-            fullLength += direction.length();
-        }
-
         path = new ArrayList<>();
-        Iterator<Vec2Double> pathIterator = directions.iterator();
-        Point position = startPosition;
-        Vec2Double activePathPart = pathIterator.next();
-        Vec2Double activeNorm = normalizeToMicroTick(activePathPart, fullLength); //normalize to microticks
-        Point activePartStart = startPosition;
-        Point activePartEnd = startPosition.offset(activePathPart);
 
-        path.add(startPosition);
-        for (int i = 0; i < 60000; i++) { // 60 tics
+        Iterator<PointToVel> pathIterator = milestones.iterator();
+        PointToVel activePathPart = pathIterator.next();
+        Point activePartStart = activePathPart.point;
+        PointToVel nextPathPart = null;
+        Point activePartEnd = null;
+        if(pathIterator.hasNext()) {
+            nextPathPart = pathIterator.next();
+            activePartEnd = nextPathPart.point;
+        } else {
+            activePartEnd = activePartStart.offset(activePathPart.velocity);
+        }
+        Point position = activePathPart.point;
+        Vec2Double activeNorm = normalizeToMicroTick(activePathPart.velocity);
+
+
+        path.add(activePartStart);
+        for (int i = 1; i < 60000; i++) { // 60 tics
             Point tmpPosition = position.offset(activeNorm);
             if(tmpPosition.buildVector(activePartStart).length() <= activePartEnd.buildVector(activePartStart).length()){//we are at the same vector
                 position = tmpPosition;
                 path.add(position);
             } else { //take the next vector
-                if(pathIterator.hasNext()){
-                    activePathPart = pathIterator.next();
-                    activeNorm = normalizeToMicroTick(activePathPart, fullLength);
-                    activePartStart = activePartEnd; //new vector starts where previous ends
-                    activePartEnd = activePartStart.offset(activePathPart);
-                    position = activePartStart; //switch position to new vector start. It can lead to some inaccuracy :)
-                    path.add(position);
-                } else {
-                    Logger.log("Warning! Trying to get position which is too far! Microtick: " + i);
+                activePathPart = nextPathPart;
+                if(activePathPart == null){
                     return;
                 }
+                activeNorm = normalizeToMicroTick(activePathPart.velocity);
+                activePartStart = activePathPart.point; //new vector starts where previous ends
+                position = activePathPart.point; //switch position to new vector start. It can lead to some inaccuracy :)
+                path.add(position);
+                if(pathIterator.hasNext()){
+                    nextPathPart = pathIterator.next();
+                    activePartEnd = nextPathPart.point;
+                } else {
+                    nextPathPart = null;
+                    activePartEnd = position.offset(activePathPart.velocity);
+                }
             }
-            if(Logger.isLocalRun && i % 60 == 0) {
+            if(Logger.isLocalRun && i % 500 == 0) {
                 debug.draw(new CustomData.Rect(path.get(i), new Vec2Double(0.1, 0.1), ColorFloat.RED));
             }
         }
     }
 
     public static Path buildPath(Unit unit, Vec2Double predictedVelocity, Game game, Debug debug){
-        List<Vec2Double> path = new ArrayList<>(3);
         Point currentPosition = unit.getPositionForShooting();
+
+        List<PointToVel> pointToVelocity = new ArrayList<>();
+        pointToVelocity.add(new PointToVel(currentPosition, predictedVelocity));
 
         //unit is jumping
         if(unit.getJumpState().getMaxTime() != 0){
             double maxTime = unit.getJumpState().getMaxTime();
             Vec2Double maxJumpVector = new Vec2Double(predictedVelocity.x*maxTime, predictedVelocity.y*maxTime);
-            Vec2Double afterMaxHeight = predictedVelocity.minus(maxJumpVector);
-            afterMaxHeight.y = -game.getProperties().getUnitFallSpeed();//falling down
 
-            //debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(maxJumpVector), 0.05f, ColorFloat.YELLOW));
-            //debug.draw(new CustomData.Line(currentPosition.offset(maxJumpVector), currentPosition.offset(maxJumpVector).offset(afterMaxHeight), 0.05f, ColorFloat.YELLOW));
-
-            //path.add(maxJumpVector);
             //check collision
-            List<Vec2Double> splitFirst = splitOnCollision(currentPosition, maxJumpVector, unit.getSize(), game);
+            List<PointToVel> splitFirst = splitOnCollision(currentPosition, maxJumpVector, predictedVelocity, unit.getSize(), game);
             if(splitFirst.size() > 1){ //collision has occurred
-                path.addAll(splitFirst);
+                PointToVel afterCol = splitFirst.get(1);
+
+                pointToVelocity.add(afterCol);
             } else { //there were no collisions
-                path.add(maxJumpVector);//it's same maxJumpVector vector
+                Point maxJumpPoint = currentPosition.offset(maxJumpVector);
+                Vec2Double velAfterMaxJump = predictedVelocity.cpy();
+                velAfterMaxJump.y = - game.getProperties().getUnitFallSpeed();
+                pointToVelocity.add(new PointToVel(maxJumpPoint, velAfterMaxJump));//just add initial point with predicted vel
             }
 
-            Point positionAfterFirstPart = currentPosition;
-            for (Vec2Double vec2Double : splitFirst) {
-                positionAfterFirstPart = positionAfterFirstPart.offset(vec2Double);
-            }
-            List<Vec2Double> splitSecond = splitOnCollision(positionAfterFirstPart, afterMaxHeight, unit.getSize(), game);
+            PointToVel lastPoint = pointToVelocity.get(pointToVelocity.size()-1);
+
+            List<PointToVel> splitSecond = splitOnCollision(lastPoint.point, lastPoint.velocity, lastPoint.velocity, unit.getSize(), game);
             if(splitSecond.size() > 1){//collision has occurred in the second part
-                path.addAll(splitSecond);
+                pointToVelocity.add(splitSecond.get(1));
             } else {
-                path.add(afterMaxHeight);
+                //do nothing, already present in list
             }
         } else {
             Intersection intersection = Utils.closestIntersectionBox(currentPosition, currentPosition.offset(predictedVelocity),
@@ -121,61 +115,64 @@ public class Path {
             if(intersection != null) {
                 Point intPoint = intersection.point;
                 debug.draw(new CustomData.Rect(intPoint, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
-                Vec2Double beforeInt = intPoint.buildVector(currentPosition);
 
-                //remained velocity after intersection
-                Vec2Double afterInt = predictedVelocity.minus(beforeInt);
+                Vec2Double velAfterInt = predictedVelocity.cpy();
                 if (intersection.wall.isVertical) {
-                    afterInt.x = 0;
+                    velAfterInt.x = 0;
                 } else {
-                    afterInt.y = 0;
+                    velAfterInt.y = 0;
                 }
-                debug.draw(new CustomData.Line(intPoint, intPoint.offset(afterInt), 0.05f, ColorFloat.BLUE));
-
-                path.add(beforeInt);
-                path.add(afterInt);
+                //debug.draw(new CustomData.Line(intPoint, intPoint.offset(afterInt), 0.05f, ColorFloat.BLUE));
+                pointToVelocity.add(new PointToVel(intPoint, velAfterInt));
             } else {
-                path.add(predictedVelocity);
+                //already in list
             }
         }
 
-        Point vecStart = currentPosition;
-        for (Vec2Double vec2Double : path) {
-            Point vecEnd = vecStart.offset(vec2Double);
-            debug.draw(new CustomData.Line(vecStart, vecEnd, 0.05f, ColorFloat.YELLOW));
-            vecStart = vecEnd;
+        for (PointToVel pointToVel : pointToVelocity) {
+            debug.draw(new CustomData.Line(pointToVel.point, pointToVel.point.offset(pointToVel.velocity), 0.05f, ColorFloat.YELLOW));
         }
 
-        Path toReturn = new Path(path, currentPosition, game.getProperties().getUpdatesPerTick(), game.getProperties().getTicksPerSecond());
+
+        Path toReturn = new Path(pointToVelocity, game.getProperties().getUpdatesPerTick(), game.getProperties().getTicksPerSecond());
         toReturn.convertToPoints(debug);
         return toReturn;
     }
 
-    private static List<Vec2Double> splitOnCollision(Point startPoint, Vec2Double vector, Vec2Double size, Game game){
+    private static List<PointToVel> splitOnCollision(Point startPoint, Vec2Double vector, Vec2Double velocity, Vec2Double size, Game game){
+        List<PointToVel> pointToVelocity = new ArrayList<>();
+        pointToVelocity.add(new PointToVel(startPoint, velocity));
+
         Intersection intersection = Utils.closestIntersectionBox(startPoint, startPoint.offset(vector),
                 game.getLevel().getWalls(), size);
         if(intersection != null){
-            List<Vec2Double> splitted = new ArrayList<>(2);
             Point intPoint = intersection.point;
-            Vec2Double beforeInt = intPoint.buildVector(startPoint);
 
-            //remained velocity after intersection
-            Vec2Double afterInt = vector.minus(beforeInt);
+            Vec2Double velAfterInt = velocity.cpy();
             if(intersection.wall.isVertical){
-                afterInt.x = 0;
+                velAfterInt.x = 0;
             } else {
-                if(afterInt.y > 0){ //ceiling, falling back
-                    afterInt.y = - game.getProperties().getUnitFallSpeed();
+                if(velAfterInt.y > 0){ //ceiling, falling down
+                    velAfterInt.y = - game.getProperties().getUnitFallSpeed();
                 } else { //floor
-                    afterInt.y = 0;
+                    velAfterInt.y = 0;
                 }
             }
 
-            splitted.add(beforeInt);
-            splitted.add(afterInt);
-            return splitted;
+            pointToVelocity.add(new PointToVel(intPoint, velAfterInt));
+            return pointToVelocity;
         } else {
-            return Collections.singletonList(vector);
+            return Collections.singletonList(new PointToVel(startPoint, velocity));
+        }
+    }
+
+    private static class PointToVel {
+        private Point point;
+        private Vec2Double velocity;
+
+        public PointToVel(Point point, Vec2Double velocity) {
+            this.point = point;
+            this.velocity = velocity;
         }
     }
 }

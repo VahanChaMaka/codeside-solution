@@ -73,6 +73,10 @@ public class Vec2Double {
         return scaleThis(1/length());
     }
 
+    public Vec2Double cpy(){
+        return new Vec2Double(this.x, this.y);
+    }
+
     public Vec2Float toFloatVector(){
         return new Vec2Float((float)x, (float)y);
     }
