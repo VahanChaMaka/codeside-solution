@@ -49,7 +49,7 @@ public class Path {
 
 
         path.add(activePartStart);
-        for (int i = 1; i < 60000; i++) { // 60 tics
+        for (int i = 1; i < 61000; i++) { // 61 tics
             Point tmpPosition = position.offset(activeNorm);
             if(tmpPosition.buildVector(activePartStart).length() <= activePartEnd.buildVector(activePartStart).length()){//we are at the same vector
                 position = tmpPosition;
@@ -71,9 +71,9 @@ public class Path {
                     activePartEnd = position.offset(activePathPart.velocity);
                 }
             }
-            if(Logger.isLocalRun && i % 500 == 0) {
+            /*if(Logger.isLocalRun && i % 500 == 0) {
                 debug.draw(new CustomData.Rect(path.get(i), new Vec2Double(0.1, 0.1), ColorFloat.RED));
-            }
+            }*/
         }
     }
 
@@ -83,8 +83,7 @@ public class Path {
         List<PointToVel> pointToVelocity = new ArrayList<>();
         pointToVelocity.add(new PointToVel(currentPosition, predictedVelocity));
 
-        //unit is jumping
-        if(unit.getJumpState().getMaxTime() != 0){
+        if(unit.isJumping()){
             double maxTime = unit.getJumpState().getMaxTime();
             Vec2Double maxJumpVector = new Vec2Double(predictedVelocity.x*maxTime, predictedVelocity.y*maxTime);
 

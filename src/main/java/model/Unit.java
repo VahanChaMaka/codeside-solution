@@ -164,6 +164,10 @@ public class Unit {
         this.weapon = weapon;
     }
 
+    public boolean isJumping(){
+        return getJumpState().getMaxTime() != 0;
+    }
+
     @Override
     public String toString() {
         return "Unit{" +

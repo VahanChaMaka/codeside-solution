@@ -34,19 +34,18 @@ public class MyStrategy {
         Vec2Double aim = new Vec2Double(-1, -1);
         if (nearestEnemy != null ) {
             if(unit.getWeapon() != null) {
-                if(game.getCurrentTick() > 10) {
-                    buildAimVectorNew(nearestEnemy);
-                }
+                Vec2Double predictedVelocity = predictVelocity();
+                aim = buildAimVector(nearestEnemy, predictedVelocity);
 
-                aim = buildAimVector(nearestEnemy, predictVelocity());
                 shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
+
+                double maxJumpTime = unit.getJumpState().getMaxTime();
+                Vec2Double maxJumpVector = new Vec2Double(predictedVelocity.x*maxJumpTime, predictedVelocity.y*maxJumpTime);
                 //if bullet will hit wall/floor, try to predict enemy's velocity with collisions
-                if(!shoot){
-                    Vec2Double predictedVelocityWithCollision = predictVelocityWithCollision();
-                    if(predictedVelocityWithCollision != null) {
-                        aim = buildAimVector(nearestEnemy, predictedVelocityWithCollision);
-                        shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
-                    }
+                //if aiming higher than enemy can jump
+                if(!shoot || unit.getPositionForShooting().offset(aim).y > nearestEnemy.getPositionForShooting().offset(maxJumpVector).y){
+                    aim = buildAimVectorNew(nearestEnemy);
+                    debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
                 }
 
                 Point intersection = unit.getPositionForShooting().offset(aim);
@@ -133,7 +132,7 @@ public class MyStrategy {
 
         for (Unit gameUnit : game.getUnits()) {
             Point leftDownCorner = gameUnit.getPosition().offset(-game.getProperties().getUnitSize().x/2, 0);
-            debug.draw(new CustomData.Rect(leftDownCorner, game.getProperties().getUnitSize(), new ColorFloat(0, 1, 0, 0.2f)));
+            //debug.draw(new CustomData.Rect(leftDownCorner, game.getProperties().getUnitSize(), new ColorFloat(0, 1, 0, 0.2f)));
         }
 
         if(unit.getWeapon() != null) {
@@ -286,7 +285,7 @@ public class MyStrategy {
         Point intersection = getIntersection(nearestEnemy.getPositionForShooting(), predictedEnemyVelocity, unit.getPositionForShooting(), bulletSpeed);
 
         Vec2Double aim = intersection.buildVector(unit.getPositionForShooting());
-        //debug.draw(new CustomData.Line(unit.getPositionForShooting(), intersection, 0.05f, ColorFloat.GREEN));
+        debug.draw(new CustomData.Line(unit.getPositionForShooting(), intersection, 0.05f, ColorFloat.GREEN));
         return aim;
     }
 
@@ -295,8 +294,8 @@ public class MyStrategy {
         double bulletSpeed = unit.getWeapon().getParams().getBullet().getSpeed();
         double minDistance = Double.MAX_VALUE;
 
-        //simulate for 50 ticks
-        for (int i = 0; i < 5000; i++) {
+        //simulate for 60 ticks
+        for (int i = 0; i < 6000; i++) {
             Point predictedPosition = path.getPositionAtMicroTick(i);
             //Point enemyLeftBotCorner = predictedPosition.offset(enemy.getSize().x/2, enemy.getSize().y/2);
             Vec2Double bulletVec = predictedPosition.buildVector(unit.getPositionForShooting()).normalizeThis().scaleThis(bulletSpeed);
@@ -307,7 +306,7 @@ public class MyStrategy {
             if(distance < minDistance){
                 minDistance = distance;
             } else {
-                debug.draw(new CustomData.Line(unit.getPositionForShooting(), predictedPosition, 0.05f, new ColorFloat(1, 1, 1, 1)));
+                //debug.draw(new CustomData.Line(unit.getPositionForShooting(), predictedPosition, 0.05f, new ColorFloat(1, 1, 1, 1)));
                 return predictedPosition.buildVector(unit.getPositionForShooting());
             }
 
@@ -315,11 +314,6 @@ public class MyStrategy {
                 Logger.log("Pred pos: " + predictedPosition + " , bul pos: " + bulletPosition);
                 //debug.draw(new CustomData.Rect(predictedPosition, new Vec2Double(0.1f, 0.1f), ColorFloat.RED));
             }
-
-            /*if(Utils.isPointInsideRect(bulletPosition, enemyLeftBotCorner, enemy.getSize())){
-                debug.draw(new CustomData.Line(unit.getPositionForShooting(), bulletPosition, 0.05f, new ColorFloat(1, 1, 1, 1)));
-                return bulletVec;
-            }*/
         }
 
         return null;
