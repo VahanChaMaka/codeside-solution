@@ -3,6 +3,9 @@ import util.Debug;
 import util.Logger;
 import util.Utils;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class MyStrategy {
     private Unit unit;
     private Game game;
@@ -51,6 +54,11 @@ public class MyStrategy {
 
                 Point intersection = unit.getPositionForShooting().offset(aim);
                 targetPos = buildPositionForShooting(nearestEnemy, intersection);
+
+                /*if(!shoot){
+                    aim = new Vec2Double(nearestEnemy.getPositionForShooting().x - unit.getPositionForShooting().x,
+                            nearestEnemy.getPositionForShooting().y - unit.getPositionForShooting().y);
+                }*/
             } else {//look at the enemy without a weapon to reduce spread on the first shot
                 aim = new Vec2Double(nearestEnemy.getPositionForShooting().x - unit.getPositionForShooting().x,
                   nearestEnemy.getPositionForShooting().y - unit.getPositionForShooting().y);
@@ -83,8 +91,11 @@ public class MyStrategy {
             jump = true;
         }
 
+        double horizontalVelocity = Math.signum(targetPos.x - unit.getPosition().x) * game.getProperties().getUnitMaxHorizontalSpeed();
+        jumpToDodge(horizontalVelocity, jump);
+
         UnitAction action = new UnitAction();
-        action.setVelocity(Math.signum(targetPos.x - unit.getPosition().x) * game.getProperties().getUnitMaxHorizontalSpeed());
+        action.setVelocity(horizontalVelocity);
         action.setJump(jump);
         action.setJumpDown(!jump);
         action.setAim(aim);
@@ -321,4 +332,34 @@ public class MyStrategy {
         return enemy.getPositionForShooting().buildVector(unit.getPositionForShooting());
     }
 
+    private boolean jumpToDodge(double xVelocity, boolean jump){
+        double yVelocity = 0;
+        if(!unit.isOnGround() ){
+            if(unit.getJumpState().isCanJump() && jump) { //in jump up state
+                yVelocity = unit.getJumpState().getSpeed();
+            } else { //falling down
+                yVelocity = -game.getProperties().getUnitFallSpeed();
+            }
+        } else if(jump){
+            yVelocity = unit.getJumpState().getSpeed();
+        }
+        Vec2Double velVector = new Vec2Double(xVelocity, yVelocity);
+        Vec2Double velVectorMicrotick = velVector.scale(1/(game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
+        Point unitFuturePosition = unit.getPosition().offset(-game.getProperties().getUnitSize().x/2, 0);
+        //10 ticks
+        for (int i = 0; i < 1000; i++) {
+            unitFuturePosition = unitFuturePosition.offset(velVectorMicrotick);
+            for (Bullet bullet : game.getBullets()) {
+                if(bullet.getPlayerId() != unit.getPlayerId()) {
+                    Point position = bullet.getPosition().offset(bullet.getVelocity().scale(i / (game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond())));
+                    if (Utils.isPointInsideRect(position, unitFuturePosition, unit.getSize())) {
+                        debug.draw(new CustomData.Rect(position, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
+                    }
+                }
+            }
+        }
+
+        //debug.draw(new CustomData.Rect(unitFuturePosition, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
+        return false;
+    }
 }
