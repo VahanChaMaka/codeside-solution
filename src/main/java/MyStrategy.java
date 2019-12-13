@@ -8,7 +8,7 @@ public class MyStrategy {
     private Game game;
     private Debug debug;
 
-    private static final int STATES_SIZE = 5;
+    private static final int STATES_SIZE = 3;
     private StateHolder<Unit> previousEnemyStates = new StateHolder<>(STATES_SIZE); //holds t(current), t-1, t-2, t-3
 
     public void update(Game game, Unit unit, Debug debug){
@@ -45,6 +45,7 @@ public class MyStrategy {
                 //if aiming higher than enemy can jump
                 if(!shoot || unit.getPositionForShooting().offset(aim).y > nearestEnemy.getPositionForShooting().offset(maxJumpVector).y){
                     aim = buildAimVectorNew(nearestEnemy);
+                    shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
                     debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
                 }
 
