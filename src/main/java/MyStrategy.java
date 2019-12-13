@@ -316,7 +316,8 @@ public class MyStrategy {
             }
         }
 
-        return null;
+        //rocket can fly more than 60 ticks
+        return enemy.getPositionForShooting().buildVector(unit.getPositionForShooting());
     }
 
 }
