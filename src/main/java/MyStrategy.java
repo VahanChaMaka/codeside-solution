@@ -3,6 +3,7 @@ import util.Debug;
 import util.Logger;
 import util.Utils;
 
+import javax.rmi.CORBA.Util;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -44,9 +45,11 @@ public class MyStrategy {
 
                 double maxJumpTime = unit.getJumpState().getMaxTime();
                 Vec2Double maxJumpVector = new Vec2Double(predictedVelocity.x*maxJumpTime, predictedVelocity.y*maxJumpTime);
+                boolean willCollide = Utils.closestIntersectionBox(nearestEnemy.getPositionForShooting(), nearestEnemy.getPositionForShooting().offset(predictedVelocity),
+                        game.getLevel().getWalls(), nearestEnemy.getSize()) != null;
                 //if bullet will hit wall/floor, try to predict enemy's velocity with collisions
                 //if aiming higher than enemy can jump
-                if(!shoot || unit.getPositionForShooting().offset(aim).y > nearestEnemy.getPositionForShooting().offset(maxJumpVector).y){
+                if(!shoot || willCollide || unit.getPositionForShooting().offset(aim).y > nearestEnemy.getPositionForShooting().offset(maxJumpVector).y){
                     aim = buildAimVectorNew(nearestEnemy);
                     shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
                     debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
@@ -283,6 +286,8 @@ public class MyStrategy {
         if (weapon == null){
             return false;
         }
+
+        position = position.offset(0, -weapon.getParams().getBullet().getSize());
 
         double bulletSize = weapon.getParams().getBullet().getSize();
         Intersection closestIntersection = Utils.closestIntersectionBox(position, target, game.getLevel().getWalls(), new Vec2Double(bulletSize, bulletSize));
