@@ -3,8 +3,7 @@ import util.Debug;
 import util.Logger;
 import util.Utils;
 
-import javax.rmi.CORBA.Util;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MyStrategy {
@@ -95,7 +94,9 @@ public class MyStrategy {
         }
 
         double horizontalVelocity = Math.signum(targetPos.x - unit.getPosition().x) * game.getProperties().getUnitMaxHorizontalSpeed();
-        jumpToDodge(horizontalVelocity, jump);
+        boolean dodge = jumpToDodge(horizontalVelocity, jump);
+        //debug.draw(new CustomData.Log("Dodging " + dodge));
+        jump =  dodge;
 
         UnitAction action = new UnitAction();
         action.setVelocity(horizontalVelocity);
@@ -343,28 +344,78 @@ public class MyStrategy {
             if(unit.getJumpState().isCanJump() && jump) { //in jump up state
                 yVelocity = unit.getJumpState().getSpeed();
             } else { //falling down
-                yVelocity = -game.getProperties().getUnitFallSpeed();
+                yVelocity = - game.getProperties().getUnitFallSpeed();
             }
         } else if(jump){
             yVelocity = unit.getJumpState().getSpeed();
         }
         Vec2Double velVector = new Vec2Double(xVelocity, yVelocity);
-        Vec2Double velVectorMicrotick = velVector.scale(1/(game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
+
+        int doNothingDamage = collectedDamage(velVector);
+        int cancelJumpDamage = doNothingDamage;
+        int doJumpDamage = doNothingDamage;
+
+        //if jumping, try to cancel
+        if(unit.getJumpState().isCanJump() && jump && unit.getJumpState().isCanCancel()){
+            Vec2Double cancelVel = velVector.cpy();
+            cancelVel.y = - game.getProperties().getUnitFallSpeed();
+            cancelJumpDamage = collectedDamage(cancelVel);
+        }
+
+        //try to jump
+        if(unit.getJumpState().isCanJump() && !jump ){
+            Vec2Double jumpVel = velVector.cpy();
+            jumpVel.y = unit.getJumpState().getSpeed();
+            doJumpDamage = collectedDamage(jumpVel);
+        }
+
+        debug.draw(new CustomData.Log("Nothing: " + doNothingDamage + ", j: " + doJumpDamage + ", c: " + cancelJumpDamage));
+
+        if(cancelJumpDamage < doNothingDamage || doJumpDamage < doNothingDamage){
+            return doJumpDamage <= cancelJumpDamage;
+        } else {
+            return jump;
+        }
+        //debug.draw(new CustomData.Rect(unitFuturePosition, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
+    }
+
+    private int collectedDamage(Vec2Double velocity){
+        int damage = 0;
+        List<Integer> caughtBulletInd = new ArrayList<>();
+
+        Vec2Double velVectorMicrotick = velocity.scale(1/(game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
         Point unitFuturePosition = unit.getPosition().offset(-game.getProperties().getUnitSize().x/2, 0);
         //10 ticks
         for (int i = 0; i < 1000; i++) {
             unitFuturePosition = unitFuturePosition.offset(velVectorMicrotick);
-            for (Bullet bullet : game.getBullets()) {
-                if(bullet.getPlayerId() != unit.getPlayerId()) {
+            for (int j = 0; j < game.getBullets().length; j++) {
+                Bullet bullet = game.getBullets()[j];
+
+                Point bulPos = bullet.getPosition();
+                boolean hitsWall = bulPos.x >= 0 && bulPos.x < game.getLevel().getTiles().length && bulPos.y >= 0 && bulPos.y < game.getLevel().getTiles()[0].length
+                        && game.getLevel().getTiles()[(int)bulPos.x][(int)bulPos.y] == Tile.WALL;
+                if(hitsWall){
+                    caughtBulletInd.add(j);
+                    if(bullet.getExplosionParams() != null && unitFuturePosition.buildVector(bulPos).length() <=3){
+                        damage += bullet.getExplosionParams().getDamage();
+                    }
+                    continue;
+                }
+
+                if(bullet.getPlayerId() != unit.getPlayerId() && !caughtBulletInd.contains(j)) { //skip already caught bullet
                     Point position = bullet.getPosition().offset(bullet.getVelocity().scale(i / (game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond())));
                     if (Utils.isPointInsideRect(position, unitFuturePosition, unit.getSize())) {
-                        debug.draw(new CustomData.Rect(position, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
+                        caughtBulletInd.add(j);
+                        damage += bullet.getDamage();
+                        if(bullet.getExplosionParams() != null){
+                            damage += bullet.getExplosionParams().getDamage();
+                        }
+                        //debug.draw(new CustomData.Rect(position, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
                     }
                 }
             }
         }
 
-        //debug.draw(new CustomData.Rect(unitFuturePosition, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
-        return false;
+        return damage;
     }
 }

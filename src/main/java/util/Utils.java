@@ -7,10 +7,6 @@ import java.util.List;
 
 public class Utils {
 
-    public static double getAverageDamage(Weapon weapon){
-        return 0;
-    }
-
     public static double distanceSqr(Point a, Point b) {
         return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
     }
@@ -66,7 +62,7 @@ public class Utils {
     }
 
     public static boolean isPointInsideRect(Point point, Point leftBotCorner, Vec2Double rectSize){
-        Point rightUpCorner = point.offset(rectSize);
+        Point rightUpCorner = leftBotCorner.offset(rectSize);
         return point.x >= leftBotCorner.x && point.x <= rightUpCorner.x
                 && point.y >= leftBotCorner.y && point.y <= rightUpCorner.y;
     }
