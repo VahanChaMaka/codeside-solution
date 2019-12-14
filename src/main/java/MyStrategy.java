@@ -385,32 +385,37 @@ public class MyStrategy {
 
         Vec2Double velVectorMicrotick = velocity.scale(1/(game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
         Point unitFuturePosition = unit.getPosition().offset(-game.getProperties().getUnitSize().x/2, 0);
-        //10 ticks
-        for (int i = 0; i < 1000; i++) {
+        //30 ticks
+        for (int i = 0; i < 3000; i++) {
+            if(caughtBulletInd.size() == game.getBullets().length){
+                break;
+            }
+            
             unitFuturePosition = unitFuturePosition.offset(velVectorMicrotick);
             for (int j = 0; j < game.getBullets().length; j++) {
                 Bullet bullet = game.getBullets()[j];
 
-                Point bulPos = bullet.getPosition();
-                boolean hitsWall = bulPos.x >= 0 && bulPos.x < game.getLevel().getTiles().length && bulPos.y >= 0 && bulPos.y < game.getLevel().getTiles()[0].length
-                        && game.getLevel().getTiles()[(int)bulPos.x][(int)bulPos.y] == Tile.WALL;
-                if(hitsWall){
-                    caughtBulletInd.add(j);
-                    if(bullet.getExplosionParams() != null && unitFuturePosition.buildVector(bulPos).length() <=3){
-                        damage += bullet.getExplosionParams().getDamage();
-                    }
-                    continue;
-                }
-
                 if(bullet.getPlayerId() != unit.getPlayerId() && !caughtBulletInd.contains(j)) { //skip already caught bullet
-                    Point position = bullet.getPosition().offset(bullet.getVelocity().scale(i / (game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond())));
-                    if (Utils.isPointInsideRect(position, unitFuturePosition, unit.getSize())) {
+                    Point bulFuturePos = bullet.getPosition().offset(bullet.getVelocity().scale(i / (game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond())));
+                    /*boolean hitsWall = bulFuturePos.x >= 0 && bulFuturePos.x < game.getLevel().getTiles().length && bulFuturePos.y >= 0 && bulFuturePos.y < game.getLevel().getTiles()[0].length
+                            && game.getLevel().getTiles()[(int)bulFuturePos.x][(int)bulFuturePos.y] == Tile.WALL;*/
+                    boolean hitsWall = Utils.closestIntersectionBox(bullet.getPosition(), bulFuturePos, game.getLevel().getWalls(), new Vec2Double(bullet.getSize(), bullet.getSize())) != null;
+                    if(hitsWall){
+                        caughtBulletInd.add(j);
+                        if(bullet.getExplosionParams() != null
+                                && unitFuturePosition.buildVector(bulFuturePos).length() <= bullet.getExplosionParams().getRadius() + unit.getSize().length()/2){ //expand expl radius to check unit's corners
+                            damage += bullet.getExplosionParams().getDamage();
+                        }
+                        continue;
+                    }
+
+                    if (Utils.isPointInsideRect(bulFuturePos, unitFuturePosition, unit.getSize().plus(bullet.getSize(), bullet.getSize()))) {
                         caughtBulletInd.add(j);
                         damage += bullet.getDamage();
                         if(bullet.getExplosionParams() != null){
                             damage += bullet.getExplosionParams().getDamage();
                         }
-                        //debug.draw(new CustomData.Rect(position, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
+                        //debug.draw(new CustomData.Rect(bulFuturePos, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
                     }
                 }
             }
