@@ -192,7 +192,11 @@ public class MyStrategy {
 
         //project diagonals on the cone's base and select max
         double diag1Proj = diag1.dot(coneBaseV)/coneBaseV.length();
+        diag1Proj = diag1Proj * Math.signum(diag1Proj);
+
         double diag2Proj = diag2.dot(coneBaseV)/coneBaseV.length();
+        diag2Proj = diag2Proj * Math.signum(diag2Proj);
+
         double maxProj = Math.max(diag1Proj, diag2Proj);
 
         double result = maxProj/coneBaseV.length();
@@ -208,12 +212,32 @@ public class MyStrategy {
     private Point buildPositionForShooting(Unit enemy, Point predictedPosition){
         double hitChance = getHitProbability(predictedPosition);
         double distanceToEnemy = predictedPosition.buildVector(unit.getPositionForShooting()).length();
-        //debug.draw(new CustomData.Log("Hit chance: " + hitChance));
+        double deltaX = predictedPosition.buildVector(unit.getPositionForShooting()).x;
+        deltaX = deltaX * Math.signum(deltaX);
 
-        if(!canHit(unit.getPositionForShooting(), predictedPosition, unit.getWeapon(), true) || hitChance < 0.5){
+        double deltaY = predictedPosition.buildVector(unit.getPositionForShooting()).y;
+        deltaY = deltaY * Math.signum(deltaY);
+        //debug.draw(new CustomData.Log("Hit chance: " + hitChance));
+        //debug.draw(new CustomData.Log("Delta x: " + deltaX));
+
+        if(!canHit(unit.getPositionForShooting(), predictedPosition, unit.getWeapon(), true)
+                || (hitChance < 0.3 && deltaX > unit.getSize().x * 2)){//prevent sitting on top of the enemy
             return enemy.getPosition();
-        } else if(distanceToEnemy < 4){//not sure if it's a good idea
-            return unit.getPositionForShooting().offset(Math.signum(unit.getPositionForShooting().buildVector(enemy.getPositionForShooting()).x), 0);
+        } else if(deltaX < unit.getSize().x * 2 && deltaY > unit.getSize().y * 3) {//if on top/under enemy, move towards closest health pack. Can stick if HP is on the same x as enemy
+            LootBox nearestHP = getNearestLootBox(Item.HealthPack.class);
+            if(nearestHP != null) {
+                return nearestHP.getPosition();
+            } else { //just move to the left or right side
+                Point edgePoint = unit.getPosition().cpy();
+                if(unit.getPosition().x > game.getLevel().getTiles().length/2){
+                    edgePoint.x = 0;
+                } else {
+                    edgePoint.x = game.getLevel().getTiles().length;
+                }
+                return edgePoint;
+            }
+        } else if(distanceToEnemy < 6){//6 is min distance to have enough time to dodge from bullet in center
+            return unit.getPosition().offset(Math.signum(unit.getPositionForShooting().buildVector(enemy.getPositionForShooting()).x), 0);
         } else {
             return unit.getPosition();
         }
@@ -403,13 +427,13 @@ public class MyStrategy {
                     if(hitsWall){
                         caughtBulletInd.add(j);
                         if(bullet.getExplosionParams() != null
-                                && unitFuturePosition.buildVector(bulFuturePos).length() <= bullet.getExplosionParams().getRadius() + unit.getSize().length()/2){ //expand expl radius to check unit's corners
+                                && unitFuturePosition.buildVector(bulFuturePos).length() <= bullet.getExplosionParams().getRadius() + unit.getSize().length()){ //expand expl radius to check unit's corners
                             damage += bullet.getExplosionParams().getDamage();
                         }
                         continue;
                     }
 
-                    if (Utils.isPointInsideRect(bulFuturePos, unitFuturePosition, unit.getSize().plus(bullet.getSize(), bullet.getSize()))) {
+                    if (Utils.isPointInsideRect(bulFuturePos, unitFuturePosition, unit.getSize().plus(bullet.getSize(), bullet.getSize()).scaleThis(1.2))) {
                         caughtBulletInd.add(j);
                         damage += bullet.getDamage();
                         if(bullet.getExplosionParams() != null){

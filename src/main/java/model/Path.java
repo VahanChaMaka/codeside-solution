@@ -78,7 +78,7 @@ public class Path {
     }
 
     public static Path buildPath(Unit unit, Vec2Double predictedVelocity, Game game, Debug debug){
-        Point currentPosition = unit.getPositionForShooting();
+        Point currentPosition = unit.getPositionForShooting().cpy();
 
         List<PointToVel> pointToVelocity = new ArrayList<>();
         pointToVelocity.add(new PointToVel(currentPosition, predictedVelocity));

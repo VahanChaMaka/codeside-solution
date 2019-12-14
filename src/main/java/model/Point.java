@@ -29,6 +29,10 @@ public class Point {
         return new Point(this.x + x, this.y + y);
     }
 
+    public Point cpy(){
+        return new Point(this.x, this.y);
+    }
+
     public static Point readFrom(java.io.InputStream stream) throws java.io.IOException {
         return new Point(StreamUtil.readDouble(stream), StreamUtil.readDouble(stream));
     }
