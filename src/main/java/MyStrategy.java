@@ -276,6 +276,11 @@ public class MyStrategy {
 
         Point previousPosition = previousEnemyStates.get(t).getPositionForShooting();
         Vec2Double predictedEnemyVelocity = currentPosition.buildVector(previousPosition).scaleThis(game.getProperties().getTicksPerSecond()/t);
+
+        //if unit is falling, it is falling. Avoid averaging vertical velocity
+        if(!previousEnemyStates.get(0).isOnGround() && !previousEnemyStates.get(0).getJumpState().isCanJump()){
+            predictedEnemyVelocity.y = - game.getProperties().getUnitFallSpeed();
+        }
         //debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(predictedEnemyVelocity), 0.05f, ColorFloat.BLUE));
         return predictedEnemyVelocity;
     }
