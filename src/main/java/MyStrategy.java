@@ -137,9 +137,9 @@ public class MyStrategy {
     }
 
     private void drawRandomShit(){
-        for (Wall wall : game.getLevel().getWalls()) {
+        /*for (Wall wall : game.getLevel().getWalls()) {
             debug.draw(new CustomData.Line(wall.first, wall.second, 0.1f, ColorFloat.RED));
-        }
+        }*/
 
         for (Bullet bullet : game.getBullets()) {
             Point leftCorner = bullet.getPosition().offset(-bullet.getSize()/2, -bullet.getSize()/2);

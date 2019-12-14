@@ -88,7 +88,7 @@ public class Path {
             Vec2Double maxJumpVector = new Vec2Double(predictedVelocity.x*maxTime, predictedVelocity.y*maxTime);
 
             //check collision
-            List<PointToVel> splitFirst = splitOnCollision(currentPosition, maxJumpVector, predictedVelocity, unit.getSize(), game);
+            List<PointToVel> splitFirst = splitOnCollision(currentPosition, maxJumpVector, predictedVelocity, unit.getSize(), game, debug);
             if(splitFirst.size() > 1){ //collision has occurred
                 PointToVel afterCol = splitFirst.get(1);
 
@@ -102,7 +102,7 @@ public class Path {
 
             PointToVel lastPoint = pointToVelocity.get(pointToVelocity.size()-1);
 
-            List<PointToVel> splitSecond = splitOnCollision(lastPoint.point, lastPoint.velocity, lastPoint.velocity, unit.getSize(), game);
+            List<PointToVel> splitSecond = splitOnCollision(lastPoint.point, lastPoint.velocity, lastPoint.velocity, unit.getSize(), game, debug);
             if(splitSecond.size() > 1){//collision has occurred in the second part
                 pointToVelocity.add(splitSecond.get(1));
             } else {
@@ -113,7 +113,7 @@ public class Path {
                     game.getLevel().getWalls(), unit.getSize());
             if(intersection != null) {
                 Point intPoint = intersection.point;
-                debug.draw(new CustomData.Rect(intPoint, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
+                //debug.draw(new CustomData.Rect(intPoint, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
 
                 Vec2Double velAfterInt = predictedVelocity.cpy();
                 if (intersection.wall.isVertical) {
@@ -138,7 +138,7 @@ public class Path {
         return toReturn;
     }
 
-    private static List<PointToVel> splitOnCollision(Point startPoint, Vec2Double vector, Vec2Double velocity, Vec2Double size, Game game){
+    private static List<PointToVel> splitOnCollision(Point startPoint, Vec2Double vector, Vec2Double velocity, Vec2Double size, Game game, Debug debug){
         List<PointToVel> pointToVelocity = new ArrayList<>();
         pointToVelocity.add(new PointToVel(startPoint, velocity));
 
