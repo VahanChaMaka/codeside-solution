@@ -19,6 +19,16 @@ public class Vec2Double {
         this.y = p.y;
     }
 
+    public Vec2Double setX(double x) {
+        this.x = x;
+        return this;
+    }
+
+    public Vec2Double setY(double y) {
+        this.y = y;
+        return this;
+    }
+
     public static Vec2Double readFrom(java.io.InputStream stream) throws java.io.IOException {
         Vec2Double result = new Vec2Double();
         result.x = StreamUtil.readDouble(stream);

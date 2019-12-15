@@ -1,6 +1,5 @@
 import model.*;
 import util.Debug;
-import util.Logger;
 import util.Utils;
 
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ public class MyStrategy {
         Unit nearestEnemy = getNearestEnemy();
         if(nearestEnemy != null) {
             previousEnemyStates.put(nearestEnemy);
-            debug.draw(new CustomData.Log("Enemy pos:" + nearestEnemy.getPosition()));
+           // debug.draw(new CustomData.Log("Enemy pos:" + nearestEnemy.getPosition()));
         }
 
         LootBox nearestWeapon = getNearestLootBox(Item.Weapon.class);
@@ -73,7 +72,7 @@ public class MyStrategy {
         if (unit.getWeapon() == null && nearestWeapon != null) {
             targetPos = nearestWeapon.getPosition();
         }
-        debug.draw(new CustomData.Log("Target pos: " + targetPos));
+        //debug.draw(new CustomData.Log("Target pos: " + targetPos));
 
         if(unit.getHealth() < 75){
             LootBox nearestHealthPack = getNearestLootBox(Item.HealthPack.class);
@@ -94,9 +93,10 @@ public class MyStrategy {
         }
 
         double horizontalVelocity = Math.signum(targetPos.x - unit.getPosition().x) * game.getProperties().getUnitMaxHorizontalSpeed();
-        boolean dodge = jumpToDodge(horizontalVelocity, jump);
+        Utils.Pair<Boolean, Double> dodge = dodge(horizontalVelocity, jump);
         //debug.draw(new CustomData.Log("Dodging " + dodge));
-        jump =  dodge;
+        jump =  dodge.getOne();
+        horizontalVelocity = dodge.getAnother();
 
         UnitAction action = new UnitAction();
         action.setVelocity(horizontalVelocity);
@@ -156,7 +156,7 @@ public class MyStrategy {
             //debug.draw(new CustomData.Log("Aim speed: " + unit.getWeapon().getParams().getAimSpeed()));
         }
 
-        debug.draw(new CustomData.Log("My pos: " + unit.getPosition()));
+        //debug.draw(new CustomData.Log("My pos: " + unit.getPosition()));
     }
 
     private double getHitProbability(Point targetPosition){
@@ -358,7 +358,7 @@ public class MyStrategy {
             }
 
             if(i % 300 == 0){
-                Logger.log("Pred pos: " + predictedPosition + " , bul pos: " + bulletPosition);
+                //Logger.log("Pred pos: " + predictedPosition + " , bul pos: " + bulletPosition);
                 //debug.draw(new CustomData.Rect(predictedPosition, new Vec2Double(0.1f, 0.1f), ColorFloat.RED));
             }
         }
@@ -367,8 +367,9 @@ public class MyStrategy {
         return enemy.getPositionForShooting().buildVector(unit.getPositionForShooting());
     }
 
-    private boolean jumpToDodge(double xVelocity, boolean jump){
+    private Utils.Pair<Boolean, Double> dodge(double xVelocity, boolean jump){
         double yVelocity = 0;
+        debug.draw(new CustomData.Log("On gr: " + unit.isOnGround()));
         if(!unit.isOnGround() ){
             if(unit.getJumpState().isCanJump() && jump) { //in jump up state
                 yVelocity = unit.getJumpState().getSpeed();
@@ -380,40 +381,67 @@ public class MyStrategy {
         }
         Vec2Double velVector = new Vec2Double(xVelocity, yVelocity);
 
-        int doNothingDamage = collectedDamage(velVector);
-        int cancelJumpDamage = doNothingDamage;
-        int doJumpDamage = doNothingDamage;
+        Utils.Pair<Double, Integer> doNothingDamage = maxCollectedDamageByX(velVector);
+        Utils.Pair<Double, Integer> cancelJumpDamage = doNothingDamage;
+        Utils.Pair<Double, Integer> doJumpDamage = doNothingDamage;
 
         //if jumping, try to cancel
         if(unit.getJumpState().isCanJump() && jump && unit.getJumpState().isCanCancel()){
             Vec2Double cancelVel = velVector.cpy();
             cancelVel.y = - game.getProperties().getUnitFallSpeed();
-            cancelJumpDamage = collectedDamage(cancelVel);
+            cancelJumpDamage = maxCollectedDamageByX(cancelVel);
         }
 
         //try to jump
         if(unit.getJumpState().isCanJump() && !jump ){
             Vec2Double jumpVel = velVector.cpy();
             jumpVel.y = unit.getJumpState().getSpeed();
-            doJumpDamage = collectedDamage(jumpVel);
+            doJumpDamage = maxCollectedDamageByX(jumpVel);
         }
 
-        debug.draw(new CustomData.Log("Nothing: " + doNothingDamage + ", j: " + doJumpDamage + ", c: " + cancelJumpDamage));
+        //debug.draw(new CustomData.Log("Nothing: " + doNothingDamage + ", j: " + doJumpDamage + ", c: " + cancelJumpDamage));
 
-        if(cancelJumpDamage < doNothingDamage || doJumpDamage < doNothingDamage){
-            return doJumpDamage <= cancelJumpDamage;
+        if(cancelJumpDamage.getAnother() < doNothingDamage.getAnother() || doJumpDamage.getAnother() < doNothingDamage.getAnother()){
+            if(cancelJumpDamage.getAnother() < doJumpDamage.getAnother()){
+                return new Utils.Pair<>(false, cancelJumpDamage.getOne());
+            } else {
+                return new Utils.Pair<>(true, doJumpDamage.getOne());
+            }
         } else {
-            return jump;
+            return new Utils.Pair<>(jump, doNothingDamage.getOne());
         }
         //debug.draw(new CustomData.Rect(unitFuturePosition, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
+    }
+
+    //return horizontal velocity to collected damage
+    private Utils.Pair<Double, Integer> maxCollectedDamageByX(Vec2Double velocity){
+        double maxHorSpeed = game.getProperties().getUnitMaxHorizontalSpeed();
+        Utils.Pair<Double, Integer> doNothing = new Utils.Pair<>(velocity.x, collectedDamage(velocity));
+        Utils.Pair<Double, Integer> left = new Utils.Pair<>(- maxHorSpeed, collectedDamage(velocity.cpy().setX(- maxHorSpeed)));
+        Utils.Pair<Double, Integer> right = new Utils.Pair<>(maxHorSpeed, collectedDamage(velocity.cpy().setX(maxHorSpeed)));
+
+        debug.draw(new CustomData.Log("J: " + (velocity.y>0) + ", l: " + left.getAnother() + ", r: " + right.getAnother() + ", n: " + doNothing.getAnother()
+                + ", vel: " + velocity));
+
+        //important to do nothing if there is no difference
+        if(left.getAnother() < doNothing.getAnother() || right.getAnother() < doNothing.getAnother()){
+            if(left.getAnother() < right.getAnother()){
+                return left;
+            } else {
+                return right;
+            }
+        } else {
+            return doNothing;
+        }
     }
 
     private int collectedDamage(Vec2Double velocity){
         int damage = 0;
         List<Integer> caughtBulletInd = new ArrayList<>();
 
-        Vec2Double velVectorMicrotick = velocity.scale(1/(game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
-        Point unitFuturePosition = unit.getPosition().offset(-game.getProperties().getUnitSize().x/2, 0);
+        Vec2Double futureVelocity = velocity.cpy();
+        Vec2Double velVectorMicrotick = futureVelocity.scale(1/(game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
+        Point unitFuturePosition = unit.getPositionForShooting();
         //30 ticks
         for (int i = 0; i < 3000; i++) {
             if(caughtBulletInd.size() == game.getBullets().length){
@@ -421,6 +449,15 @@ public class MyStrategy {
             }
             
             unitFuturePosition = unitFuturePosition.offset(velVectorMicrotick);
+
+            //check collisions against walls
+            if(i % 10 == 0){
+                Intersection intersection = Utils.closestIntersectionBox(unit.getPositionForShooting(), unitFuturePosition, game.getLevel().getWalls(), unit.getSize());
+                if(intersection != null && intersection.wall.isVertical){
+                    futureVelocity.x = 0;
+                }
+            }
+
             for (int j = 0; j < game.getBullets().length; j++) {
                 Bullet bullet = game.getBullets()[j];
 

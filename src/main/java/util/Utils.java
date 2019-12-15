@@ -121,19 +121,28 @@ public class Utils {
         return centerPositionOnCol;
     }
 
-    public static boolean isPointInsideRect(Point point, Point leftBotCorner, Vec2Double rectSize){
-        Point rightUpCorner = leftBotCorner.offset(rectSize);
-        return point.x >= leftBotCorner.x && point.x <= rightUpCorner.x
-                && point.y >= leftBotCorner.y && point.y <= rightUpCorner.y;
+    public static boolean isPointInsideRect(Point point, Point center, Vec2Double rectSize){
+        Point leftDownCorner = center.offset(-rectSize.x/2, -rectSize.y/2);
+        Point rightUpCorner = leftDownCorner.offset(rectSize);
+        return point.x >= leftDownCorner.x && point.x <= rightUpCorner.x
+                && point.y >= leftDownCorner.y && point.y <= rightUpCorner.y;
     }
 
-    private static class Pair<K, V>{
+    public static class Pair<K, V>{
         private K one;
         private V another;
 
         public Pair(K one, V another) {
             this.one = one;
             this.another = another;
+        }
+
+        public K getOne() {
+            return one;
+        }
+
+        public V getAnother() {
+            return another;
         }
     }
 }
