@@ -50,7 +50,7 @@ public class MyStrategy {
                 if(!shoot || willCollide || unit.getPositionForShooting().offset(aim).y > nearestEnemy.getPositionForShooting().offset(maxJumpVector).y){
                     aim = buildAimVectorNew(nearestEnemy);
                     shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
-                    debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
+                    //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
                 }
 
                 Point intersection = unit.getPositionForShooting().offset(aim);
@@ -143,7 +143,7 @@ public class MyStrategy {
 
         for (Bullet bullet : game.getBullets()) {
             Point leftCorner = bullet.getPosition().offset(-bullet.getSize()/2, -bullet.getSize()/2);
-            debug.draw(new CustomData.Rect(leftCorner, new Vec2Double(bullet.getSize(), bullet.getSize()), bullet.getPlayerId() == unit.getPlayerId()? ColorFloat.BLUE : ColorFloat.RED));
+            //debug.draw(new CustomData.Rect(leftCorner, new Vec2Double(bullet.getSize(), bullet.getSize()), bullet.getPlayerId() == unit.getPlayerId()? ColorFloat.BLUE : ColorFloat.RED));
         }
 
         for (Unit gameUnit : game.getUnits()) {
@@ -181,9 +181,9 @@ public class MyStrategy {
         Point s2End = new Point(position.x + s2.x, position.y + s2.y);
         Vec2Double coneBaseV = s2End.buildVector(s1End);
 
-        debug.draw(new CustomData.Line(position, s1End, 0.05f, ColorFloat.RED));
+        /*debug.draw(new CustomData.Line(position, s1End, 0.05f, ColorFloat.RED));
         debug.draw(new CustomData.Line(position, s2End, 0.05f, ColorFloat.RED));
-        debug.draw(new CustomData.Line(s1End, s2End, 0.05f, ColorFloat.RED));
+        debug.draw(new CustomData.Line(s1End, s2End, 0.05f, ColorFloat.RED));*/
 
         //two vectors, representing diagonals of the aim's hitbox
         Vec2Double unitSize = game.getProperties().getUnitSize();
@@ -322,7 +322,7 @@ public class MyStrategy {
         double bulletSize = weapon.getParams().getBullet().getSize();
         Intersection closestIntersection = Utils.closestIntersectionBox(position, target, game.getLevel().getWalls(), new Vec2Double(bulletSize, bulletSize));
         if(drawIntersection && closestIntersection != null){
-            debug.draw(new CustomData.Rect(closestIntersection.point, new Vec2Double(0.2, 0.2), ColorFloat.RED));
+            //debug.draw(new CustomData.Rect(closestIntersection.point, new Vec2Double(0.2, 0.2), ColorFloat.RED));
         }
         return closestIntersection == null;
     }
@@ -332,7 +332,7 @@ public class MyStrategy {
         Point intersection = getIntersection(nearestEnemy.getPositionForShooting(), predictedEnemyVelocity, unit.getPositionForShooting(), bulletSpeed);
 
         Vec2Double aim = intersection.buildVector(unit.getPositionForShooting());
-        debug.draw(new CustomData.Line(unit.getPositionForShooting(), intersection, 0.05f, ColorFloat.GREEN));
+        //debug.draw(new CustomData.Line(unit.getPositionForShooting(), intersection, 0.05f, ColorFloat.GREEN));
         return aim;
     }
 
@@ -369,7 +369,6 @@ public class MyStrategy {
 
     private Utils.Pair<Boolean, Double> dodge(double xVelocity, boolean jump){
         double yVelocity = 0;
-        debug.draw(new CustomData.Log("On gr: " + unit.isOnGround()));
         if(!unit.isOnGround() ){
             if(unit.getJumpState().isCanJump() && jump) { //in jump up state
                 yVelocity = unit.getJumpState().getSpeed();
@@ -420,8 +419,8 @@ public class MyStrategy {
         Utils.Pair<Double, Integer> left = new Utils.Pair<>(- maxHorSpeed, collectedDamage(velocity.cpy().setX(- maxHorSpeed)));
         Utils.Pair<Double, Integer> right = new Utils.Pair<>(maxHorSpeed, collectedDamage(velocity.cpy().setX(maxHorSpeed)));
 
-        debug.draw(new CustomData.Log("J: " + (velocity.y>0) + ", l: " + left.getAnother() + ", r: " + right.getAnother() + ", n: " + doNothing.getAnother()
-                + ", vel: " + velocity));
+        //debug.draw(new CustomData.Log("J: " + (velocity.y>0) + ", l: " + left.getAnother() + ", r: " + right.getAnother() + ", n: " + doNothing.getAnother()
+                //+ ", vel: " + velocity));
 
         //important to do nothing if there is no difference
         if(left.getAnother() < doNothing.getAnother() || right.getAnother() < doNothing.getAnother()){
@@ -455,6 +454,7 @@ public class MyStrategy {
                 Intersection intersection = Utils.closestIntersectionBox(unit.getPositionForShooting(), unitFuturePosition, game.getLevel().getWalls(), unit.getSize());
                 if(intersection != null && intersection.wall.isVertical){
                     futureVelocity.x = 0;
+                    velVectorMicrotick = futureVelocity.scale(1/(game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
                 }
             }
 
