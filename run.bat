@@ -1,5 +1,18 @@
+echo."%*" | findstr /C:"2x2" 1>nul
+if errorlevel 1 (
+	ECHO starting 2x1
+	SET config="config.json"
+) else (
+	ECHO starting 2x2
+	SET config="config2x2.json"
+)
 cd ../
-START ./local-runner/aicup2019.exe --config "config.json"
+START ./local-runner/aicup2019.exe --config %config%
 cd ./codeside-solution
-START /WAIT CMD /c mvn clean install
+echo."%*" | findstr /C:"recompile" 1>nul
+if errorlevel 1 (
+	echo dont recompile
+) else (
+	START /WAIT CMD /c mvn clean install
+)
 java -jar ./target/aicup2019-jar-with-dependencies.jar "127.0.0.1" "31001" "0000000000000000" "local"
