@@ -50,8 +50,13 @@ public class MyStrategy {
                 if(!shoot || willCollide || unit.getPositionForShooting().offset(aim).y > nearestEnemy.getPositionForShooting().offset(maxJumpVector).y){
                     aim = buildAimVectorNew(nearestEnemy);
                     shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
-                    //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
                 }
+                //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
+
+                if(unit.getWeapon().getType() == WeaponType.ROCKET_LAUNCHER){
+                    //aim = aimInLegs(aim);
+                }
+                //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
 
                 Point intersection = unit.getPositionForShooting().offset(aim);
                 targetPos = buildPositionForShooting(nearestEnemy, intersection);
@@ -92,6 +97,22 @@ public class MyStrategy {
             jump = true;
         }
 
+        if(shoot){
+            Vec2Double bulletVec = aim.getNormalized().scaleThis(unit.getWeapon().getParams().getBullet().getSpeed());
+            Vec2Double bulletVecMcrtck = bulletVec.scale(1/(game.getProperties().getTicksPerSecond()*game.getProperties().getUpdatesPerTick()));
+            for (Unit gameUnit : game.getUnits()) {
+                if(gameUnit.getId() != unit.getId() && gameUnit.getPlayerId() == unit.getPlayerId()){
+                    for (int i = 0; i < 800; i++) {
+                        if(Utils.isPointInsideRect(unit.getPositionForShooting().offset(bulletVecMcrtck.scale(i)), gameUnit.getPositionForShooting(), gameUnit.getSize().scale(1.5))){
+                            shoot = false;
+                            jump = true;
+                            //debug.draw(new CustomData.Log("Shooting is prohibited!"));
+                        }
+                    }
+                }
+            }
+        }
+
         double horizontalVelocity = Math.signum(targetPos.x - unit.getPosition().x) * game.getProperties().getUnitMaxHorizontalSpeed();
         Utils.Pair<Boolean, Double> dodge = dodge(horizontalVelocity, jump);
         //debug.draw(new CustomData.Log("Dodging " + dodge));
@@ -113,7 +134,8 @@ public class MyStrategy {
     private LootBox getNearestLootBox(Class<? extends Item> itemClass){
         LootBox nearestLootBox = null;
         for (LootBox lootBox : game.getLootBoxes()) {
-            if (itemClass.isInstance(lootBox.getItem() )) {
+            if (itemClass.isInstance(lootBox.getItem())
+                    /*&& itemClass == Item.Weapon.class && ((Item.Weapon)lootBox.getItem()).getWeaponType() == WeaponType.ROCKET_LAUNCHER*/) {
                 if (nearestLootBox == null || Utils.distanceSqr(unit.getPosition(),
                         lootBox.getPosition()) < Utils.distanceSqr(unit.getPosition(), nearestLootBox.getPosition())) {
                     nearestLootBox = lootBox;
@@ -461,7 +483,7 @@ public class MyStrategy {
             for (int j = 0; j < game.getBullets().length; j++) {
                 Bullet bullet = game.getBullets()[j];
 
-                if(bullet.getPlayerId() != unit.getPlayerId() && !caughtBulletInd.contains(j)) { //skip already caught bullet
+                if(bullet.getUnitId() != unit.getId() && !caughtBulletInd.contains(j)) { //skip already caught bullet
                     Point bulFuturePos = bullet.getPosition().offset(bullet.getVelocity().scale(i / (game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond())));
                     /*boolean hitsWall = bulFuturePos.x >= 0 && bulFuturePos.x < game.getLevel().getTiles().length && bulFuturePos.y >= 0 && bulFuturePos.y < game.getLevel().getTiles()[0].length
                             && game.getLevel().getTiles()[(int)bulFuturePos.x][(int)bulFuturePos.y] == Tile.WALL;*/
@@ -488,5 +510,29 @@ public class MyStrategy {
         }
 
         return damage;
+    }
+
+    private Vec2Double aimInLegs(Vec2Double originalAim){
+        //Point intersection = unit.getPositionForShooting().offset(originalAim.getNormalized().scaleThis(unit.getWeapon().getParams().getBullet().getSpeed()));
+        Point intersection = unit.getPositionForShooting().offset(originalAim);
+        Point closestWall = null;
+        for (int i = (int)intersection.x - 3; i <= intersection.x + 3; i++) {
+            for (int j = (int)intersection.y - 3; j < intersection.y + 3; j++) {
+                if(i <= 0 || i >= game.getLevel().getTiles().length - 1
+                        || j <= 0 || j >= game.getLevel().getTiles()[0].length - 1 || game.getLevel().getTiles()[i][j] == Tile.WALL){
+                    Point wall = new Point(i + 0.5, j + 0.5);//center of the cell
+                    debug.draw(new CustomData.Rect(wall, new Vec2Double(0.1, 0.1), ColorFloat.RED));
+                    if(closestWall == null || wall.buildVector(intersection).length() < closestWall.buildVector(intersection).length()){
+                        closestWall = wall;
+                    }
+                }
+            }
+        }
+
+        if(closestWall != null){
+            return closestWall.buildVector(unit.getPositionForShooting());
+        } else {
+            return originalAim;
+        }
     }
 }
