@@ -155,7 +155,7 @@ public class Game {
         return "Game{" +
                 "\ncurrentTick=" + currentTick +
                 ", \nproperties=" + properties +
-                ", \nlevel=" + level +
+                ", \nlevel=" /*+ level*/ +
                 ", \nplayers=" + Arrays.toString(players) +
                 ", \nunits=" + Arrays.toString(units) +
                 ", \nbullets=" + Arrays.toString(bullets) +

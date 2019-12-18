@@ -54,17 +54,12 @@ public class MyStrategy {
                 //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
 
                 if(unit.getWeapon().getType() == WeaponType.ROCKET_LAUNCHER){
-                    //aim = aimInLegs(aim);
+                    aim = aimInLegs(aim);
                 }
                 //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
 
                 Point intersection = unit.getPositionForShooting().offset(aim);
                 targetPos = buildPositionForShooting(nearestEnemy, intersection);
-
-                /*if(!shoot){
-                    aim = new Vec2Double(nearestEnemy.getPositionForShooting().x - unit.getPositionForShooting().x,
-                            nearestEnemy.getPositionForShooting().y - unit.getPositionForShooting().y);
-                }*/
             } else {//look at the enemy without a weapon to reduce spread on the first shot
                 aim = new Vec2Double(nearestEnemy.getPositionForShooting().x - unit.getPositionForShooting().x,
                   nearestEnemy.getPositionForShooting().y - unit.getPositionForShooting().y);
@@ -513,7 +508,7 @@ public class MyStrategy {
     }
 
     private Vec2Double aimInLegs(Vec2Double originalAim){
-        //Point intersection = unit.getPositionForShooting().offset(originalAim.getNormalized().scaleThis(unit.getWeapon().getParams().getBullet().getSpeed()));
+        Vec2Double explSize = new Vec2Double(unit.getWeapon().getParams().getExplosion().getRadius()*2, unit.getWeapon().getParams().getExplosion().getRadius()*2);
         Point intersection = unit.getPositionForShooting().offset(originalAim);
         Point closestWall = null;
         for (int i = (int)intersection.x - 3; i <= intersection.x + 3; i++) {
@@ -521,9 +516,19 @@ public class MyStrategy {
                 if(i <= 0 || i >= game.getLevel().getTiles().length - 1
                         || j <= 0 || j >= game.getLevel().getTiles()[0].length - 1 || game.getLevel().getTiles()[i][j] == Tile.WALL){
                     Point wall = new Point(i + 0.5, j + 0.5);//center of the cell
-                    debug.draw(new CustomData.Rect(wall, new Vec2Double(0.1, 0.1), ColorFloat.RED));
-                    if(closestWall == null || wall.buildVector(intersection).length() < closestWall.buildVector(intersection).length()){
-                        closestWall = wall;
+                    //debug.draw(new CustomData.Rect(wall, new Vec2Double(0.1, 0.1), ColorFloat.RED));
+                    Intersection rocketWallInt = Utils.closestIntersectionBox(unit.getPositionForShooting(), wall, game.getLevel().getWalls(),
+                            new Vec2Double(unit.getWeapon().getParams().getBullet().getSize(), unit.getWeapon().getParams().getBullet().getSize()));
+                    /*if(rocketWallInt != null){
+                        debug.draw(new CustomData.Rect(rocketWallInt.point, new Vec2Double(0.1, 0.1), ColorFloat.RED));
+                    }
+                    if(rocketWallInt != null && Utils.isPointInsideRect(rocketWallInt.point, intersection, explSize)){
+                        debug.draw(new CustomData.Rect(rocketWallInt.point, new Vec2Double(0.1, 0.1), ColorFloat.YELLOW));
+                    }*/
+                    if((rocketWallInt != null && Utils.isPointInsideRect(rocketWallInt.point, intersection, explSize)) //check if collided rocket will hit enemy
+                            && (closestWall == null || rocketWallInt.point.buildVector(intersection).length() < closestWall.buildVector(intersection).length())){//select closes collision
+                        closestWall = rocketWallInt.point;
+                        //debug.draw(new CustomData.Rect(wall, new Vec2Double(0.1, 0.1), ColorFloat.GREEN));
                     }
                 }
             }

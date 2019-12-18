@@ -8,7 +8,7 @@ if errorlevel 1 (
 )
 cd ../
 START ./local-runner/aicup2019.exe --config %config%
-START java -jar ./local-runner/simple.jar "127.0.0.1" "31002" "0000000000000000" "local"
+START /MIN java -jar ./local-runner/simple.jar "127.0.0.1" "31002" "0000000000000000" "local"
 cd ./codeside-solution
 echo."%*" | findstr /C:"recompile" 1>nul
 if errorlevel 1 (
