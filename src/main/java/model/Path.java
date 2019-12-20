@@ -128,9 +128,9 @@ public class Path {
             }
         }
 
-        for (PointToVel pointToVel : pointToVelocity) {
+        /*for (PointToVel pointToVel : pointToVelocity) {
             debug.draw(new CustomData.Line(pointToVel.point, pointToVel.point.offset(pointToVel.velocity), 0.05f, ColorFloat.YELLOW));
-        }
+        }*/
 
 
         Path toReturn = new Path(pointToVelocity, game.getProperties().getUpdatesPerTick(), game.getProperties().getTicksPerSecond());

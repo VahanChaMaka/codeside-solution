@@ -87,6 +87,16 @@ public class Vec2Double {
         return new Vec2Double(this.x, this.y);
     }
 
+    public double angleCos(Vec2Double another){
+        return this.dot(another)/(this.length()*another.length());
+    }
+
+    public Vec2Double invertThis(){
+        this.x = -x;
+        this.y = -y;
+        return this;
+    }
+
     public Vec2Float toFloatVector(){
         return new Vec2Float((float)x, (float)y);
     }
