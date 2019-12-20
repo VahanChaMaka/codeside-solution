@@ -15,7 +15,7 @@ public class Logger {
                 Calendar calendar = new GregorianCalendar();
                 calendar.setTimeInMillis(time);
                 log.append("" + calendar.get(Calendar.HOUR) + ":" + calendar.get(Calendar.MINUTE) + ":" +
-                        calendar.get(Calendar.SECOND) + " -> ");
+                        calendar.get(Calendar.SECOND) + ":" + calendar.get(Calendar.MILLISECOND) +  " -> ");
                 log.append(message);
                 log.append("\n\n");
                 log.flush();

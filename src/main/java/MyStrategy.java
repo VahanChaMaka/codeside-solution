@@ -51,10 +51,12 @@ public class MyStrategy {
                     aim = buildAimVectorNew(nearestEnemy);
                     shoot = canHit(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), unit.getWeapon(), true);
                 }
-                //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
+                //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.YELLOW));
 
                 if(unit.getWeapon().getType() == WeaponType.ROCKET_LAUNCHER){
-                    aim = aimInLegs(aim);
+                    Utils.Pair<Vec2Double, Boolean> aimShootPair = aimInLegs(aim, shoot);
+                    aim = aimShootPair.getOne();
+                    shoot = aimShootPair.getAnother();
                 }
                 //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
 
@@ -536,7 +538,7 @@ public class MyStrategy {
         return damage;
     }
 
-    private Vec2Double aimInLegs(Vec2Double originalAim){
+    private Utils.Pair<Vec2Double, Boolean> aimInLegs(Vec2Double originalAim, boolean originalShoot){
         Vec2Double explSize = new Vec2Double(unit.getWeapon().getParams().getExplosion().getRadius()*2, unit.getWeapon().getParams().getExplosion().getRadius()*2);
         Point intersection = unit.getPositionForShooting().offset(originalAim);
         Point closestWall = null;
@@ -564,9 +566,9 @@ public class MyStrategy {
         }
 
         if(closestWall != null){
-            return closestWall.buildVector(unit.getPositionForShooting());
+            return new Utils.Pair<>(closestWall.buildVector(unit.getPositionForShooting()), true);
         } else {
-            return originalAim;
+            return new Utils.Pair<>(originalAim, originalShoot);
         }
     }
 }
