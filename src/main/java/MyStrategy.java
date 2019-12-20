@@ -311,7 +311,7 @@ public class MyStrategy {
                 game.getLevel().getWalls(), unit.getSize());
         if(intersection != null){
             Point intPoint = intersection.point;
-            debug.draw(new CustomData.Rect(intPoint, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
+            //debug.draw(new CustomData.Rect(intPoint, new Vec2Double(0.2, 0.2), ColorFloat.BLUE));
             Vec2Double beforeInt = intPoint.buildVector(currentPosition);
 
             //remained velocity after intersection
@@ -400,21 +400,28 @@ public class MyStrategy {
         Vec2Double velVector = new Vec2Double(xVelocity, yVelocity);
 
         Utils.Pair<Double, Integer> doNothingDamage = maxCollectedDamageByX(velVector);
+        if(doNothingDamage.getAnother() == 0){
+            return new Utils.Pair<>(jump, doNothingDamage.getOne());
+        }
+
         Utils.Pair<Double, Integer> cancelJumpDamage = doNothingDamage;
         Utils.Pair<Double, Integer> doJumpDamage = doNothingDamage;
-
-        //if jumping, try to cancel
-        if(unit.getJumpState().isCanJump() && jump && unit.getJumpState().isCanCancel()){
-            Vec2Double cancelVel = velVector.cpy();
-            cancelVel.y = - game.getProperties().getUnitFallSpeed();
-            cancelJumpDamage = maxCollectedDamageByX(cancelVel);
-        }
 
         //try to jump
         if(unit.getJumpState().isCanJump() && !jump ){
             Vec2Double jumpVel = velVector.cpy();
             jumpVel.y = unit.getJumpState().getSpeed();
             doJumpDamage = maxCollectedDamageByX(jumpVel);
+            if(doJumpDamage.getAnother() == 0){
+                return new Utils.Pair<>(true, doJumpDamage.getOne());
+            }
+        }
+
+        //if jumping, try to cancel
+        if(unit.getJumpState().isCanJump() && jump && unit.getJumpState().isCanCancel()){
+            Vec2Double cancelVel = velVector.cpy();
+            cancelVel.y = - game.getProperties().getUnitFallSpeed();
+            cancelJumpDamage = maxCollectedDamageByX(cancelVel);
         }
 
         //debug.draw(new CustomData.Log("Nothing: " + doNothingDamage + ", j: " + doJumpDamage + ", c: " + cancelJumpDamage));
@@ -435,7 +442,15 @@ public class MyStrategy {
     private Utils.Pair<Double, Integer> maxCollectedDamageByX(Vec2Double velocity){
         double maxHorSpeed = game.getProperties().getUnitMaxHorizontalSpeed();
         Utils.Pair<Double, Integer> doNothing = new Utils.Pair<>(velocity.x, collectedDamage(velocity));
+        if(doNothing.getAnother() == 0){
+            return doNothing;
+        }
+
         Utils.Pair<Double, Integer> left = new Utils.Pair<>(- maxHorSpeed, collectedDamage(velocity.cpy().setX(- maxHorSpeed)));
+        if(left.getAnother() == 0){
+            return left;
+        }
+
         Utils.Pair<Double, Integer> right = new Utils.Pair<>(maxHorSpeed, collectedDamage(velocity.cpy().setX(maxHorSpeed)));
 
         /*debug.draw(new CustomData.Log("J: " + (velocity.y>0) + ", l: " + left.getAnother() + ", r: " + right.getAnother() + ", n: " + doNothing.getAnother()
@@ -504,7 +519,7 @@ public class MyStrategy {
                 Bullet bullet = game.getBullets()[j];
 
                 if(!caughtBulletInd.contains(j)) { //skip already caught bullet
-                    if (bullet.getUnitId() != unit.getId()) {
+                    if (bullet.getExplosionParams() != null || bullet.getUnitId() != unit.getId()) {
                         //debug.draw(new CustomData.Rect(bullet.getPosition().offset(-bullet.getSize() / 2, -bullet.getSize() / 2), new Vec2Double(bullet.getSize(), bullet.getSize()), ColorFloat.RED));
                         Vec2Double bulVelNorm = bullet.getVelocity().scale(1 / (game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
                         Point bulFuturePos = bullet.getPosition().offset(bulVelNorm.scale(i));
@@ -520,7 +535,8 @@ public class MyStrategy {
                             continue;
                         }
 
-                        if (Utils.isPointInsideRect(bulFuturePos, unitFuturePosition, unit.getSize().plus(bullet.getSize(), bullet.getSize()).scaleThis(1.2))) {
+                        if (bullet.getUnitId() != unit.getId()
+                                &&Utils.isPointInsideRect(bulFuturePos, unitFuturePosition, unit.getSize().plus(bullet.getSize(), bullet.getSize()).scaleThis(1.2))) {
                             caughtBulletInd.add(j);
                             damage += bullet.getDamage();
                             if (bullet.getExplosionParams() != null) {

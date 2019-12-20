@@ -189,9 +189,9 @@ public abstract class CustomData {
         public ColorFloat getColor() { return color; }
         public void setColor(ColorFloat color) { this.color = color; }
         public PlacedText() {}
-        public PlacedText(String text, Vec2Float pos, TextAlignment alignment, float size, ColorFloat color) {
+        public PlacedText(String text, Point pos, TextAlignment alignment, float size, ColorFloat color) {
             this.text = text;
-            this.pos = pos;
+            this.pos = new Vec2Float((float)pos.x, (float)pos.y);
             this.alignment = alignment;
             this.size = size;
             this.color = color;

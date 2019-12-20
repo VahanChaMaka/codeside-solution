@@ -128,6 +128,16 @@ public class Utils {
                 && point.y >= leftDownCorner.y && point.y <= rightUpCorner.y;
     }
 
+    public static boolean isRectsIntersect(Point oneCenter, Point anotherCenter, Vec2Double oneSize, Vec2Double anotherSize){
+        Point leftDownCorner = oneCenter.offset(-oneSize.x/2, -oneSize.y/2);
+        Point rightDownCorner = leftDownCorner.offset(oneSize.x, 0);
+        Point rightUpCorner = leftDownCorner.offset(oneSize);
+        Point leftUpCorner = leftDownCorner.offset(0, oneSize.y);
+
+        return isPointInsideRect(leftDownCorner, anotherCenter, anotherSize) || isPointInsideRect(rightDownCorner, anotherCenter, anotherSize)
+                || isPointInsideRect(rightUpCorner, anotherCenter, anotherSize) || isPointInsideRect(leftUpCorner, anotherCenter, anotherSize);
+    }
+
     public static class Pair<K, V>{
         private K one;
         private V another;
