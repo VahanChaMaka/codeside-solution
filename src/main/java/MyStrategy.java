@@ -536,13 +536,14 @@ public class MyStrategy {
                         }
 
                         if (bullet.getUnitId() != unit.getId()
-                                &&Utils.isPointInsideRect(bulFuturePos, unitFuturePosition, unit.getSize().plus(bullet.getSize(), bullet.getSize()).scaleThis(1.2))) {
+                                &&Utils.isRectsIntersect(bulFuturePos, unitFuturePosition, new Vec2Double(bullet.getSize(), bullet.getSize()), unit.getSize())) {
                             caughtBulletInd.add(j);
                             damage += bullet.getDamage();
                             if (bullet.getExplosionParams() != null) {
                                 damage += bullet.getExplosionParams().getDamage();
                             }
                             //debug.draw(new CustomData.Rect(bulFuturePos, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
+                            //debug.draw(new CustomData.PlacedText(velocity.toString(), bulFuturePos.offset(0, 2), TextAlignment.CENTER, 15, ColorFloat.WHITE));
                         }
                     } else {
                         caughtBulletInd.add(j);
