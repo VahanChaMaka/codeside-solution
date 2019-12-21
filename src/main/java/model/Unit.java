@@ -16,6 +16,7 @@ public class Unit {
     private int mines;
     private Weapon weapon;
     private Path path;
+    private UnitAction action;
 
     public Unit(){
         position = new Point(0, 0);
@@ -175,6 +176,14 @@ public class Unit {
 
     public void setPath(Path path) {
         this.path = path;
+    }
+
+    public UnitAction getAction() {
+        return action;
+    }
+
+    public void setAction(UnitAction action) {
+        this.action = action;
     }
 
     @Override

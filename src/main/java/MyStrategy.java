@@ -129,6 +129,17 @@ public class MyStrategy {
         }
 
         double horizontalVelocity = Math.signum(targetPos.x - unit.getPosition().x) * game.getProperties().getUnitMaxHorizontalSpeed();
+
+        //jump over ally if it blocks the path
+        Unit ally = getAlly();
+        if(ally != null /*&& (ally.getAction() != null && !ally.getAction().isJump())*/
+                && Math.abs(ally.getPosition().y - unit.getPosition().y) <= unit.getSize().y
+                && Math.signum(ally.getPosition().x - unit.getPosition().x) == Math.signum(horizontalVelocity)
+                && Math.abs(ally.getPosition().x - unit.getPosition().x) < unit.getSize().x*2){
+            jump = true;
+            //debug.draw(new CustomData.Log("jump"));
+        }
+
         Utils.Pair<Boolean, Double> dodge = dodge(horizontalVelocity, jump);
         //debug.draw(new CustomData.Log("Dodging " + dodge));
         jump =  dodge.getOne();
@@ -185,6 +196,15 @@ public class MyStrategy {
             }
         }
         return nearestEnemy;
+    }
+
+    private Unit getAlly(){
+        for (Unit other : game.getUnits()) {
+            if (other.getPlayerId() == unit.getPlayerId() && other.getId() != unit.getId()) {
+                return other;
+            }
+        }
+        return null;
     }
 
     private void drawRandomShit(){
@@ -659,10 +679,14 @@ public class MyStrategy {
             if(unit.getWeapon() != null && unit.getWeapon().getFireTimer() != null && unit.getWeapon().getFireTimer() < 0.001 && unit.getMines() > 0){
                 int mineDamage = game.getProperties().getMineExplosionParams().getDamage();
                 List<Unit> enemiesInRange = new ArrayList<>(2);
+                List<Unit> allEnemies = new ArrayList<>(2);
                 boolean allEnemiesWillDie = true;
                 Unit allyInRange = null;
                 double mineRadius = game.getProperties().getMineExplosionParams().getRadius();
                 for (Unit gameUnit : game.getUnits()) {
+                    if(gameUnit.getPlayerId() != unit.getPlayerId()){
+                        allEnemies.add(gameUnit);
+                    }
                     if((Math.abs(gameUnit.getPositionForShooting().x - unit.getPosition().x) <=  mineRadius && Math.abs(gameUnit.getPositionForShooting().y - unit.getPosition().y) <=  mineRadius)){
                         if(gameUnit.getPlayerId() != unit.getPlayerId()){
                             enemiesInRange.add(gameUnit);
@@ -672,7 +696,7 @@ public class MyStrategy {
                         }
                     }
                 }
-                allEnemiesWillDie &= enemiesInRange.size() > 0;
+                allEnemiesWillDie &= enemiesInRange.size() == allEnemies.size();
 
                 int myScore = 0;
                 int enemyScore = 0;

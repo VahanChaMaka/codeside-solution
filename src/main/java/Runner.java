@@ -38,6 +38,7 @@ public class Runner {
 
                 //update state holders for every enemy unit
                 for (Unit unit : playerView.getGame().getUnits()) {
+                    unit.setAction(null);
                     if(unit.getPlayerId() != playerView.getMyId()){
                         if(previousEnemyStates.get(unit.getId()) == null){
                             previousEnemyStates.put(unit.getId(), new StateHolder<>(MyStrategy.STATES_SIZE));
@@ -53,6 +54,7 @@ public class Runner {
                         myStrategy.update(playerView.getGame(), unit, debug);
                         UnitAction action = myStrategy.getAction();
                         Logger.log(action.toString());
+                        unit.setAction(action);
                         actions.put(unit.getId(), action);
                     }
                 }
