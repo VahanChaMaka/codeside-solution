@@ -6,6 +6,7 @@ public class LootBox {
     private Point position;
     private Vec2Double size;
     private Item item;
+    private boolean isOccupied;
 
     public LootBox() {}
 
@@ -45,6 +46,14 @@ public class LootBox {
 
     public void setItem(Item item) {
         this.item = item;
+    }
+
+    public boolean isOccupied() {
+        return isOccupied;
+    }
+
+    public void setOccupied(boolean occupied) {
+        isOccupied = occupied;
     }
 
     @Override

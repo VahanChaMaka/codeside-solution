@@ -3,6 +3,7 @@ import util.Debug;
 import util.Utils;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MyStrategy {
@@ -27,8 +28,6 @@ public class MyStrategy {
             previousEnemyStates.put(nearestEnemy);
            // debug.draw(new CustomData.Log("Enemy pos:" + nearestEnemy.getPosition()));
         }
-
-        LootBox nearestWeapon = getNearestLootBox(Item.Weapon.class);
 
         Point targetPos = unit.getPosition();
 
@@ -71,8 +70,11 @@ public class MyStrategy {
         }
 
         //take weapon if have no any
-        if (unit.getWeapon() == null && nearestWeapon != null) {
-            targetPos = nearestWeapon.getPosition();
+        if (unit.getWeapon() == null) {
+            LootBox nearestWeapon = getNearestLootBox(Item.Weapon.class);
+            if(nearestWeapon != null) {
+                targetPos = nearestWeapon.getPosition();
+            }
         }
         //debug.draw(new CustomData.Log("Target pos: " + targetPos));
 
@@ -137,15 +139,23 @@ public class MyStrategy {
     }
 
     private LootBox getNearestLootBox(Class<? extends Item> itemClass){
+        List<LootBox> allLootBoxesOfType = new LinkedList<>();
         LootBox nearestLootBox = null;
         for (LootBox lootBox : game.getLootBoxes()) {
             if (itemClass.isInstance(lootBox.getItem())
                     /*&& itemClass == Item.Weapon.class && ((Item.Weapon)lootBox.getItem()).getWeaponType() == WeaponType.ROCKET_LAUNCHER*/) {
-                if (nearestLootBox == null || Utils.distanceSqr(unit.getPosition(),
-                        lootBox.getPosition()) < Utils.distanceSqr(unit.getPosition(), nearestLootBox.getPosition())) {
+                allLootBoxesOfType.add(lootBox);
+                if (!lootBox.isOccupied() && (nearestLootBox == null || Utils.distanceSqr(unit.getPosition(),
+                        lootBox.getPosition()) < Utils.distanceSqr(unit.getPosition(), nearestLootBox.getPosition()))) {
                     nearestLootBox = lootBox;
                 }
             }
+        }
+
+        //make concurrency for single lootbox
+        if(nearestLootBox != null && allLootBoxesOfType.size() > 1) {
+            nearestLootBox.setOccupied(true);
+            //debug.draw(new CustomData.Log(nearestLootBox.getPosition() + " by " + unit.getId()));
         }
         return nearestLootBox;
     }
