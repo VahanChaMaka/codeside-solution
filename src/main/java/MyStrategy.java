@@ -68,7 +68,8 @@ public class MyStrategy {
                 //debug.draw(new CustomData.Line(unit.getPositionForShooting(), unit.getPositionForShooting().offset(aim), 0.05f, ColorFloat.GREEN));
 
                 Point intersection = unit.getPositionForShooting().offset(aim);
-                targetPos = buildPositionForShooting(nearestEnemy, intersection);
+                targetPos = buildPositionForShooting(nearestEnemy, intersection, shoot);
+                //debug.draw(new CustomData.Rect(targetPos, new Vec2Double(0.5, 0.5), ColorFloat.BLUE));
             } else {//look at the enemy without a weapon to reduce spread on the first shot
                 aim = new Vec2Double(nearestEnemy.getPositionForShooting().x - unit.getPositionForShooting().x,
                   nearestEnemy.getPositionForShooting().y - unit.getPositionForShooting().y);
@@ -280,7 +281,7 @@ public class MyStrategy {
         //TODO: consider partially hidden target (by casting few more rays for example)
     }
 
-    private Point buildPositionForShooting(Unit enemy, Point predictedPosition){
+    private Point buildPositionForShooting(Unit enemy, Point predictedPosition, boolean shoot){
         double hitChance = getHitProbability(predictedPosition);
         double distanceToEnemy = predictedPosition.buildVector(unit.getPositionForShooting()).length();
         double deltaX = predictedPosition.buildVector(unit.getPositionForShooting()).x;
@@ -291,9 +292,7 @@ public class MyStrategy {
         //debug.draw(new CustomData.Log("Hit chance: " + hitChance));
         //debug.draw(new CustomData.Log("Delta x: " + deltaX));
 
-        if(!canHit(unit.getPositionForShooting(), predictedPosition, unit.getWeapon(), true)
-                || (hitChance < 0.3 && deltaX > unit.getSize().x * 2 //prevent sitting on top of the enemy
-                && unit.getWeapon().getType() != WeaponType.ROCKET_LAUNCHER)){
+        if(!shoot || (unit.getWeapon().getType() != WeaponType.ROCKET_LAUNCHER && hitChance < 0.3 && deltaX > unit.getSize().x * 2)){ //prevent sitting on top of the enemy
             return enemy.getPosition();
         } else if(deltaX < unit.getSize().x * 2 && deltaY > unit.getSize().y * 3) {//if on top/under enemy, move towards closest health pack. Can stick if HP is on the same x as enemy
             LootBox nearestHP = getNearestLootBox(Item.HealthPack.class);
@@ -308,7 +307,7 @@ public class MyStrategy {
                 }
                 return edgePoint;
             }
-        } else if(distanceToEnemy < 6){//6 is min distance to have enough time to dodge from bullet in center
+        } else if(distanceToEnemy < 6 + unit.getId()/2){//6 is min distance to have enough time to dodge from bullet in center
             return unit.getPosition().offset(Math.signum(unit.getPositionForShooting().buildVector(enemy.getPositionForShooting()).x), 0);
         } else {
             return unit.getPosition();
@@ -394,7 +393,7 @@ public class MyStrategy {
         double bulletSize = weapon.getParams().getBullet().getSize();
         Intersection closestIntersection = Utils.closestIntersectionBox(position, target, game.getLevel().getWalls(), new Vec2Double(bulletSize, bulletSize));
         if(drawIntersection && closestIntersection != null){
-            //debug.draw(new CustomData.Rect(closestIntersection.point, new Vec2Double(0.2, 0.2), ColorFloat.RED));
+            debug.draw(new CustomData.Rect(closestIntersection.point, new Vec2Double(0.2, 0.2), ColorFloat.RED));
         }
         return closestIntersection == null;
     }
