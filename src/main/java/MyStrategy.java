@@ -33,6 +33,7 @@ public class MyStrategy {
         Unit nearestEnemy = getNearestEnemy();
         if(nearestEnemy != null) {
             this.nearestEnemy = nearestEnemy;
+            nearestEnemy.setPath(null);
            // debug.draw(new CustomData.Log("Enemy pos:" + nearestEnemy.getPosition()));
         }
 
@@ -421,7 +422,8 @@ public class MyStrategy {
     private Utils.Pair<Boolean, Double> dodge(double xVelocity, boolean jump){
         double yVelocity = 0;
         if(!unit.isOnGround() ){
-            if(unit.getJumpState().isCanJump() && jump) { //in jump up state
+            if(unit.getJumpState().isCanJump() && jump
+                    || unit.getJumpState().getSpeed() == game.getProperties().getJumpPadJumpSpeed()) { //in jump up state
                 yVelocity = unit.getJumpState().getSpeed();
             } else { //falling down
                 yVelocity = - game.getProperties().getUnitFallSpeed();
@@ -537,14 +539,30 @@ public class MyStrategy {
             }
             
             unitFuturePosition = unitFuturePosition.offset(velVectorMicrotick);
+            //debug.draw(new CustomData.Rect(unitFuturePosition, new Vec2Double(0.05, 0.05), ColorFloat.BLUE));
 
             //check collisions against walls
             if(i % 10 == 0){
                 Intersection intersection = Utils.closestIntersectionBox(unit.getPositionForShooting(), unitFuturePosition, game.getLevel().getWalls(), unit.getSize());
                 if(intersection != null && intersection.wall.isVertical){
                     futureVelocity.x = 0;
-                    velVectorMicrotick = futureVelocity.scale(1/(game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
                 }
+
+                if(intersection != null && !intersection.wall.isVertical){
+                    futureVelocity.y = 0;
+                }
+
+                if(velocity.y == 0){
+                    double leftDownCorner = unitFuturePosition.x - unit.getSize().x/2;
+                    double rightDownCorner = leftDownCorner + unit.getSize().x;
+                    if(game.getLevel().getTiles()[(int)leftDownCorner][(int)unitFuturePosition.y-1] != Tile.WALL
+                            && game.getLevel().getTiles()[(int)rightDownCorner][(int)unitFuturePosition.y-1] != Tile.WALL) {
+                        futureVelocity.y = - game.getProperties().getUnitFallSpeed();
+                        //debug.draw(new CustomData.Rect(unitFuturePosition, new Vec2Double(0.05, 0.05), ColorFloat.RED));
+                    }
+                }
+
+                velVectorMicrotick = futureVelocity.scale(1/(game.getProperties().getUpdatesPerTick() * game.getProperties().getTicksPerSecond()));
             }
 
             for (int j = 0; j < game.getBullets().length; j++) {
@@ -561,7 +579,19 @@ public class MyStrategy {
                         if (hitsWall) {
                             caughtBulletInd.add(j);
                             if (bullet.getExplosionParams() != null
-                                    && unitFuturePosition.buildVector(bulFuturePos).length() <= bullet.getExplosionParams().getRadius() + unit.getSize().length()) { //expand expl radius to check unit's corners
+                                    && Math.abs(unitFuturePosition.x - bulFuturePos.x) <= (bullet.getExplosionParams().getRadius() + unit.getSize().x/2 + bullet.getSize())
+                                    && Math.abs(unitFuturePosition.y - bulFuturePos.y) <= (bullet.getExplosionParams().getRadius() + unit.getSize().y/2 + bullet.getSize())) { //expand expl radius to check unit's corners
+                                damage += bullet.getExplosionParams().getDamage();
+                                //debug.draw(new CustomData.Rect(bulFuturePos, new Vec2Double(0.1f, 0.1f), ColorFloat.GREEN));
+                            }
+                            continue;
+                        }
+
+                        if(bullet.getExplosionParams() != null && nearestEnemy.getPath() != null
+                                && Utils.isRectsIntersect(bulFuturePos, nearestEnemy.getPath().getPositionAtMicroTick(i), new Vec2Double(bullet.getSize(), bullet.getSize()), nearestEnemy.getSize())){
+                            caughtBulletInd.add(j);
+                            if (Math.abs(unitFuturePosition.x - bulFuturePos.x) <= (bullet.getExplosionParams().getRadius() + unit.getSize().x/2)
+                                    && Math.abs(unitFuturePosition.y - bulFuturePos.y) <= (bullet.getExplosionParams().getRadius() + unit.getSize().y/2)) {
                                 damage += bullet.getExplosionParams().getDamage();
                             }
                             continue;

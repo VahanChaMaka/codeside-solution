@@ -15,6 +15,7 @@ public class Unit {
     private boolean onLadder;
     private int mines;
     private Weapon weapon;
+    private Path path;
 
     public Unit(){
         position = new Point(0, 0);
@@ -166,6 +167,14 @@ public class Unit {
 
     public boolean isJumping(){
         return getJumpState().getMaxTime() != 0;
+    }
+
+    public Path getPath() {
+        return path;
+    }
+
+    public void setPath(Path path) {
+        this.path = path;
     }
 
     @Override
