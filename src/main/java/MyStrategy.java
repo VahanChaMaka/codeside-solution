@@ -626,7 +626,7 @@ public class MyStrategy {
         if(unit.isOnGround() && !unit.isOnLadder()
                 && (tileUnder == Tile.WALL || tileUnder == Tile.PLATFORM && unit.getJumpState().getMaxTime() == game.getProperties().getUnitJumpTime())){
             //debug.draw(new CustomData.Log("Can plant mine"));
-            if(unit.getWeapon() != null && unit.getWeapon().getFireTimer() == null && unit.getMines() > 0){
+            if(unit.getWeapon() != null && unit.getWeapon().getFireTimer() != null && unit.getWeapon().getFireTimer() < 0.001 && unit.getMines() > 0){
                 int mineDamage = game.getProperties().getMineExplosionParams().getDamage();
                 List<Unit> enemiesInRange = new ArrayList<>(2);
                 boolean allEnemiesWillDie = true;
