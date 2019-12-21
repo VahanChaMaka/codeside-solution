@@ -264,7 +264,8 @@ public class MyStrategy {
         //debug.draw(new CustomData.Log("Delta x: " + deltaX));
 
         if(!canHit(unit.getPositionForShooting(), predictedPosition, unit.getWeapon(), true)
-                || (hitChance < 0.3 && deltaX > unit.getSize().x * 2)){//prevent sitting on top of the enemy
+                || (hitChance < 0.3 && deltaX > unit.getSize().x * 2 //prevent sitting on top of the enemy
+                && unit.getWeapon().getType() != WeaponType.ROCKET_LAUNCHER)){
             return enemy.getPosition();
         } else if(deltaX < unit.getSize().x * 2 && deltaY > unit.getSize().y * 3) {//if on top/under enemy, move towards closest health pack. Can stick if HP is on the same x as enemy
             LootBox nearestHP = getNearestLootBox(Item.HealthPack.class);
