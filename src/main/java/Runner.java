@@ -25,7 +25,8 @@ public class Runner {
     }
 
     void run() throws IOException {
-        MyStrategy myStrategy = new MyStrategy();
+        Map<Integer, StateHolder<Unit>> previousEnemyStates = new HashMap<>();
+        MyStrategy myStrategy = new MyStrategy(previousEnemyStates);
         while (true) {
             try {
                 ServerMessageGame message = ServerMessageGame.readFrom(inputStream);
@@ -34,6 +35,17 @@ public class Runner {
                 if (playerView == null) {
                     break;
                 }
+
+                //update state holders for every enemy unit
+                for (Unit unit : playerView.getGame().getUnits()) {
+                    if(unit.getPlayerId() != playerView.getMyId()){
+                        if(previousEnemyStates.get(unit.getId()) == null){
+                            previousEnemyStates.put(unit.getId(), new StateHolder<>(MyStrategy.STATES_SIZE));
+                        }
+                        previousEnemyStates.get(unit.getId()).put(unit);
+                    }
+                }
+
                 Map<Integer, UnitAction> actions = new HashMap<>();
                 for (Unit unit : playerView.getGame().getUnits()) {
                     if (unit.getPlayerId() == playerView.getMyId()) {

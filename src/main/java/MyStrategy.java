@@ -5,14 +5,21 @@ import util.Utils;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class MyStrategy {
     private Unit unit;
     private Game game;
     private Debug debug;
 
-    private static final int STATES_SIZE = 3;
-    private StateHolder<Unit> previousEnemyStates = new StateHolder<>(STATES_SIZE); //holds t(current), t-1, t-2, t-3
+    public static final int STATES_SIZE = 3;
+    private Map<Integer, StateHolder<Unit>> previousEnemyStates; //holds t(current), t-1, t-2, t-3
+
+    private Unit nearestEnemy;
+
+    public MyStrategy(Map<Integer, StateHolder<Unit>> previousEnemyStates) {
+        this.previousEnemyStates = previousEnemyStates;
+    }
 
     public void update(Game game, Unit unit, Debug debug){
         this.game = game;
@@ -25,7 +32,7 @@ public class MyStrategy {
     public UnitAction getAction() {
         Unit nearestEnemy = getNearestEnemy();
         if(nearestEnemy != null) {
-            previousEnemyStates.put(nearestEnemy);
+            this.nearestEnemy = nearestEnemy;
            // debug.draw(new CustomData.Log("Enemy pos:" + nearestEnemy.getPosition()));
         }
 
@@ -311,18 +318,18 @@ public class MyStrategy {
 
     //do not consider walls and floor
     private Vec2Double predictVelocity(){
-        Point currentPosition = previousEnemyStates.get(0).getPositionForShooting();
+        Point currentPosition = previousEnemyStates.get(nearestEnemy.getId()).get(0).getPositionForShooting();
         int t = STATES_SIZE-1;
         //prevent failing when collect not enough data
-        if(t >= previousEnemyStates.getCurrentSize()){
-            t = previousEnemyStates.getCurrentSize()-1;
+        if(t >= previousEnemyStates.get(nearestEnemy.getId()).getCurrentSize()){
+            t = previousEnemyStates.get(nearestEnemy.getId()).getCurrentSize()-1;
         }
 
-        Point previousPosition = previousEnemyStates.get(t).getPositionForShooting();
+        Point previousPosition = previousEnemyStates.get(nearestEnemy.getId()).get(t).getPositionForShooting();
         Vec2Double predictedEnemyVelocity = currentPosition.buildVector(previousPosition).scaleThis(game.getProperties().getTicksPerSecond()/t);
 
         //if unit is falling, it is falling. Avoid averaging vertical velocity
-        if(!previousEnemyStates.get(0).isOnGround() && !previousEnemyStates.get(0).getJumpState().isCanJump()){
+        if(!previousEnemyStates.get(nearestEnemy.getId()).get(0).isOnGround() && !previousEnemyStates.get(nearestEnemy.getId()).get(0).getJumpState().isCanJump()){
             predictedEnemyVelocity.y = - game.getProperties().getUnitFallSpeed();
         }
         //debug.draw(new CustomData.Line(currentPosition, currentPosition.offset(predictedEnemyVelocity), 0.05f, ColorFloat.BLUE));
@@ -331,7 +338,7 @@ public class MyStrategy {
 
     private Vec2Double predictVelocityWithCollision(){
         Vec2Double rawVelocity = predictVelocity();
-        Point currentPosition = previousEnemyStates.get(0).getPositionForShooting();
+        Point currentPosition = previousEnemyStates.get(nearestEnemy.getId()).get(0).getPositionForShooting();
         Intersection intersection = Utils.closestIntersectionBox(currentPosition, currentPosition.offset(rawVelocity),
                 game.getLevel().getWalls(), unit.getSize());
         if(intersection != null){
