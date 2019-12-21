@@ -94,6 +94,14 @@ public class MyStrategy {
             jump = true;
         }
 
+        boolean jumpDown = !jump;
+        debug.draw(new CustomData.Log(unit.getPosition().toString()));
+        if(jump && unit.getJumpState().getMaxTime() < game.getProperties().getUnitJumpTime()/2
+                && game.getLevel().getTiles()[(int)unit.getPosition().x][(int)unit.getPosition().y-1] == Tile.PLATFORM){
+            jump = false;
+            jumpDown = false;
+        }
+
         if(shoot){
             Vec2Double bulletVec = aim.getNormalized().scaleThis(unit.getWeapon().getParams().getBullet().getSpeed());
             Vec2Double bulletVecMcrtck = bulletVec.scale(1/(game.getProperties().getTicksPerSecond()*game.getProperties().getUpdatesPerTick()));
@@ -119,7 +127,7 @@ public class MyStrategy {
         UnitAction action = new UnitAction();
         action.setVelocity(horizontalVelocity);
         action.setJump(jump);
-        action.setJumpDown(!jump);
+        action.setJumpDown(jumpDown);
         action.setAim(aim);
         action.setReload(false);
         action.setShoot(shoot);
