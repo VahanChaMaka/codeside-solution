@@ -154,5 +154,10 @@ public class Utils {
         public V getAnother() {
             return another;
         }
+
+        @Override
+        public String toString() {
+            return "Pair{" + one + ", " + another + '}';
+        }
     }
 }

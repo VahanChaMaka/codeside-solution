@@ -97,7 +97,7 @@ public class MyStrategy {
         }
 
         boolean jumpDown = !jump;
-        debug.draw(new CustomData.Log(unit.getPosition().toString()));
+        //debug.draw(new CustomData.Log(unit.getPosition().toString()));
         if(jump && unit.getJumpState().getMaxTime() < game.getProperties().getUnitJumpTime()/2
                 && game.getLevel().getTiles()[(int)unit.getPosition().x][(int)unit.getPosition().y-1] == Tile.PLATFORM){
             jump = false;
@@ -126,6 +126,12 @@ public class MyStrategy {
         jump =  dodge.getOne();
         horizontalVelocity = dodge.getAnother();
 
+        boolean suicide = canCommitMineSuicide();
+        if(suicide){
+            aim = unit.getPosition().buildVector(unit.getPositionForShooting());
+            shoot = true;
+        }
+
         UnitAction action = new UnitAction();
         action.setVelocity(horizontalVelocity);
         action.setJump(jump);
@@ -134,7 +140,7 @@ public class MyStrategy {
         action.setReload(false);
         action.setShoot(shoot);
         action.setSwapWeapon(false);
-        action.setPlantMine(false);
+        action.setPlantMine(suicide);
         return action;
     }
 
@@ -605,5 +611,50 @@ public class MyStrategy {
         } else {
             return new Utils.Pair<>(originalAim, originalShoot);
         }
+    }
+
+    private boolean canCommitMineSuicide(){
+        Tile tileUnder = game.getLevel().getTiles()[(int)unit.getPosition().x][(int)unit.getPosition().y-1];
+        if(unit.isOnGround() && !unit.isOnLadder()
+                && (tileUnder == Tile.WALL || tileUnder == Tile.PLATFORM && unit.getJumpState().getMaxTime() == game.getProperties().getUnitJumpTime())){
+            //debug.draw(new CustomData.Log("Can plant mine"));
+            if(unit.getWeapon() != null && unit.getWeapon().getFireTimer() == null && unit.getMines() > 0){
+                int mineDamage = game.getProperties().getMineExplosionParams().getDamage();
+                List<Unit> enemiesInRange = new ArrayList<>(2);
+                boolean allEnemiesWillDie = true;
+                Unit allyInRange = null;
+                double mineRadius = game.getProperties().getMineExplosionParams().getRadius();
+                for (Unit gameUnit : game.getUnits()) {
+                    if((Math.abs(gameUnit.getPositionForShooting().x - unit.getPosition().x) <=  mineRadius && Math.abs(gameUnit.getPositionForShooting().y - unit.getPosition().y) <=  mineRadius)){
+                        if(gameUnit.getPlayerId() != unit.getPlayerId()){
+                            enemiesInRange.add(gameUnit);
+                            allEnemiesWillDie &= gameUnit.getHealth() <= mineDamage;
+                        } else if(gameUnit.getId() != unit.getId()){
+                            allyInRange = gameUnit;
+                        }
+                    }
+                }
+                allEnemiesWillDie &= enemiesInRange.size() > 0;
+
+                int myScore = 0;
+                int enemyScore = 0;
+                for (Player player : game.getPlayers()) {
+                    if(player.getId() == unit.getPlayerId()){
+                        myScore = player.getScore();
+                    } else {
+                        enemyScore = player.getScore();
+                    }
+                }
+                //debug.draw(new CustomData.Log("My: " + myScore + ", en: " + enemyScore));
+                //debug.draw(new CustomData.Log("all die: " + allEnemiesWillDie));
+
+                boolean unitWillDie = unit.getHealth() <= mineDamage;
+
+                return allEnemiesWillDie && (myScore >= enemyScore || !unitWillDie);
+            }
+        } else {
+            //debug.draw(new CustomData.Log("Can't plant mine"));
+        }
+        return false;
     }
 }
