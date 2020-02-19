@@ -2,3 +2,4 @@
 Rules of this contest is described here https://russianaicup.ru/p/sandbox?locale=en
 
 I have successfully passed 2 phases of the contest, highest place is 66 out of 1094.
+You can watch my games by https://russianaicup.ru/profile/VahanChaMaka
